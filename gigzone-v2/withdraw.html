@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Withdraw Funds - GigZone</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .main-content {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: calc(100vh - 40px);
+    }
+
+    .withdraw-section {
+      max-width: 500px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      animation: slideIn 0.5s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .withdraw-section h2 {
+      color: #2d3748;
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 30px;
+      text-align: center;
+      position: relative;
+    }
+
+    .withdraw-section h2::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 3px;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      border-radius: 2px;
+    }
+
+    .balance-card {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      padding: 20px;
+      border-radius: 15px;
+      margin-bottom: 30px;
+      text-align: center;
+      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    }
+
+    .balance-card p {
+      font-size: 14px;
+      opacity: 0.9;
+      margin-bottom: 5px;
+    }
+
+    .balance-amount {
+      font-size: 32px;
+      font-weight: 700;
+      margin: 0;
+    }
+
+    .form-group {
+      margin-bottom: 25px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #2d3748;
+      font-size: 14px;
+    }
+
+    .form-group input, 
+    .form-group select {
+      width: 100%;
+      padding: 15px;
+      border-radius: 12px;
+      border: 2px solid #e2e8f0;
+      font-size: 16px;
+      transition: all 0.3s ease;
+      background-color: #f8fafc;
+    }
+
+    .form-group input:focus, 
+    .form-group select:focus {
+      outline: none;
+      border-color: #667eea;
+      background-color: white;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      transform: translateY(-1px);
+    }
+
+    .form-group select {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+      background-position: right 12px center;
+      background-repeat: no-repeat;
+      background-size: 16px;
+    }
+
+    .note-section {
+      background-color: #fef3cd;
+      border: 1px solid #fbbf24;
+      border-radius: 10px;
+      padding: 15px;
+      margin: 25px 0;
+    }
+
+    .note-section p {
+      color: #92400e;
+      font-size: 14px;
+      margin: 0;
+      font-weight: 500;
+    }
+
+    .withdraw-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 16px;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .withdraw-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    }
+
+    .withdraw-btn:active {
+      transform: translateY(0);
+    }
+
+    .divider {
+      border: none;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
+      margin: 40px 0;
+    }
+
+    .recent-withdrawals h3 {
+      color: #2d3748;
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+
+    .withdrawal-list {
+      list-style: none;
+    }
+
+    .withdrawal-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 0;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .withdrawal-item:last-child {
+      border-bottom: none;
+    }
+
+    .withdrawal-amount {
+      font-weight: 600;
+      color: #2d3748;
+      font-size: 16px;
+    }
+
+    .withdrawal-date {
+      color: #718096;
+      font-size: 14px;
+    }
+
+    .status {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .status.processing {
+      background-color: #fef3cd;
+      color: #92400e;
+    }
+
+    .status.completed {
+      background-color: #d1fae5;
+      color: #065f46;
+    }
+
+    @media (max-width: 600px) {
+      .withdraw-section {
+        margin: 20px;
+        padding: 30px 25px;
+      }
+      
+      .balance-amount {
+        font-size: 28px;
+      }
+      
+      .withdrawal-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="main-content">
+    <section class="withdraw-section">
+      <h2>Withdraw Funds</h2>
+      
+      <div class="balance-card">
+        <p>Available Balance</p>
+        <p class="balance-amount">₦0.00</p>
+      </div>
+
+      <div class="form-group">
+        <label for="bank">Select Bank Account</label>
+        <select id="bank">
+          <option value="">Choose your bank account</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="amount">Withdrawal Amount</label>
+        <input type="number" id="amount" placeholder="Enter amount (₦)" />
+      </div>
+
+      <div class="note-section">
+        <p><strong>Important:</strong> Minimum withdrawal is ₦1,000 for non-verified users, verify for no minimum withdrawals</p>
+      </div>
+
+      <button class="withdraw-btn" onclick="handleWithdrawal()">Request Withdrawal</button>
+
+      <hr class="divider" />
+
+      <div class="recent-withdrawals">
+        <h3>Recent Withdrawals</h3>
+        <ul class="withdrawal-list">
+           <!-- Placeholder for recent withdrawals, will be populated by JS -->
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <script>
+async function handleWithdrawal() {
+  const bank = document.getElementById('bank').value;
+  const amount = parseFloat(document.getElementById('amount').value);
+
+  if (!bank) {
+    alert('Please select a bank account');
+    return;
+  }
+
+  if (!amount || isNaN(amount)) {
+    alert('Please enter a valid amount');
+    return;
+  }
+
+  // 1. Fetch verification status
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('is_verified')
+    .eq('id', currentUserId)
+    .single();
+
+  if (profileError || !profile) {
+    alert('Error checking verification status.');
+    return;
+  }
+
+  const isVerified = profile.is_verified;
+
+  if (!isVerified && amount < 1000) {
+    alert('Minimum withdrawal for non-verified users is ₦1,000. Please verify your account to withdraw lower amounts.');
+    return;
+  }
+
+  // 2. Fetch wallet balance
+  const { data: wallet, error: walletError } = await supabase
+    .from('wallets')
+    .select('withdrawable_balance')
+    .eq('user_id', currentUserId)
+    .single();
+
+  if (walletError || !wallet) {
+    alert('Failed to fetch wallet balance.');
+    return;
+  }
+
+  if (wallet.withdrawable_balance < amount) {
+    alert(`Insufficient balance. You only have ₦${wallet.withdrawable_balance.toLocaleString()}.`);
+    return;
+  }
+
+  // 3. Show loading
+  const btn = document.querySelector('.withdraw-btn');
+  btn.innerHTML = 'Processing...';
+  btn.disabled = true;
+
+  try {
+    // 4. Call Paystack Proxy to initiate transfer
+    const paystackResponse = await fetch('http://localhost:5000/paystack/transfer', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        userId: currentUserId,
+        amount: amount,
+        bankCode: bank
+      })
+    });
+
+    const paystackResult = await paystackResponse.json();
+
+    if (!paystackResponse.ok || !paystackResult.success) {
+      throw new Error(paystackResult.message || 'Paystack transfer failed');
+    }
+
+    const transferReference = paystackResult.transfer_reference;
+
+    // 5. Insert withdrawal transaction
+    const { error: insertError } = await supabase
+      .from('transactions')
+      .insert([{
+        user_id: currentUserId,
+        type: 'withdrawal',
+        amount: amount,
+        description: 'User requested withdrawal',
+        status: 'successful',
+        reference: transferReference
+      }]);
+
+    if (insertError) {
+      throw new Error('Transfer successful but failed to save transaction. Contact support.');
+    }
+
+    // 6. Deduct from wallet
+    const { error: updateError } = await supabase
+      .from('wallets')
+      .update({
+        withdrawable_balance: wallet.withdrawable_balance - amount
+      })
+      .eq('user_id', currentUserId);
+
+    if (updateError) {
+      throw new Error('Wallet not updated. Contact support.');
+    }
+
+    // 7. Success
+    alert(`₦${amount.toLocaleString()} sent successfully to your account!`);
+    document.getElementById('bank').value = '';
+    document.getElementById('amount').value = '';
+    document.querySelector('.balance-amount').textContent = `₦${(wallet.withdrawable_balance - amount).toLocaleString()}`;
+  } catch (err) {
+    alert(err.message || 'Something went wrong. Try again.');
+  } finally {
+    btn.innerHTML = 'Request Withdrawal';
+    btn.disabled = false;
+  }
+}
+  
+    // Add input validation and formatting
+    document.getElementById('amount').addEventListener('input', function(e) {
+      const value = parseInt(e.target.value);
+      if (value > 12400) {
+        e.target.style.borderColor = '#ef4444';
+      } else {
+        e.target.style.borderColor = '#e2e8f0';
+      }
+    });
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = 'https://fwwbsoesxijhhpzpdjou.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3d2Jzb2VzeGlqaGhwenBkam91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1NzA0MzEsImV4cCI6MjA2ODE0NjQzMX0.qELrGVrVdug3q53cxNGStsFEfLcb7N-lVS9u3qu6HEE';
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let currentUserId = null;
+
+  async function initWithdrawPage() {
+    // 1. Get logged in user
+    const {
+      data: { user },
+      error
+    } = await supabase.auth.getUser();
+
+    if (error || !user) {
+      alert('You must be logged in to view this page.');
+      return;
+    }
+
+    currentUserId = user.id;
+
+    // 2. Fetch wallet
+    const { data: wallet, error: walletError } = await supabase
+      .from('wallets')
+      .select('balance, account_number, account_name')
+      .eq('user_id', currentUserId)
+      .single();
+
+    if (walletError || !wallet) {
+      alert('Error fetching wallet info.');
+      return;
+    }
+
+    // Show balance
+    document.querySelector('.balance-amount').textContent = `₦${Number(wallet.balance).toLocaleString()}`;
+
+    // Fill in bank select (you can customize this more)
+    const bankSelect = document.getElementById('bank');
+    if (wallet.account_number && wallet.account_name) {
+  const maskedNumber = `****${wallet.account_number.slice(-4)}`;
+  const option = document.createElement('option');
+  option.value = wallet.account_number;
+  option.textContent = `${wallet.account_name} - ${maskedNumber}`;
+  bankSelect.appendChild(option);
+} else {
+  alert('No linked bank account found. Please link one before withdrawing.');
+}
+
+    // 3. Fetch recent withdrawals
+    const { data: transactions, error: txError } = await supabase
+      .from('transactions')
+      .select('amount, created_at, status')
+      .eq('user_id', currentUserId)
+      .eq('type', 'withdrawal')
+      .order('created_at', { ascending: false })
+      .limit(5);
+
+    if (txError) {
+      console.error('Error loading transactions', txError);
+      return;
+    }
+
+    const list = document.querySelector('.withdrawal-list');
+    list.innerHTML = ''; // Clear placeholder items
+
+    transactions.forEach(tx => {
+      const date = new Date(tx.created_at).toLocaleDateString('en-GB', {
+        day: 'numeric', month: 'long', year: 'numeric'
+      });
+
+      const li = document.createElement('li');
+      li.className = 'withdrawal-item';
+      li.innerHTML = `
+        <div>
+          <div class="withdrawal-amount">₦${Number(tx.amount).toLocaleString()}</div>
+          <div class="withdrawal-date">${date}</div>
+        </div>
+        <span class="status ${tx.status.toLowerCase()}">${tx.status}</span>
+      `;
+      list.appendChild(li);
+    });
+  }
+
+  // Run on page load
+  window.addEventListener('DOMContentLoaded', initWithdrawPage);
+</script>
+
+</body>
+</html>

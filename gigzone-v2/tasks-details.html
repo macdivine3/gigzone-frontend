@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Task Details</title>
+  <link rel="stylesheet" href="task-details.css" />
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css"
+  >
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+</head>
+<body>
+  <div class="container">
+    <a href="browse.html" class="back-button">
+      <i class="fas fa-arrow-left"></i> Back to Tasks
+    </a>
+
+    <div class="description">
+      <h2 class="section-title">
+        <i class="fas fa-file-text"></i> Task Description
+      </h2>
+      <p id="task-description">Loading…</p>
+    </div>
+
+    <div class="task-meta">
+      <div class="meta-item">
+        <div class="label">Sub-Category</div>
+        <div class="value" id="sub-category">Loading…</div>
+      </div>
+      <div class="meta-item">
+        <div class="label">Posted by</div>
+        <div class="value" id="client-username">Loading…</div>
+      </div>
+       <div class="meta-item">
+    <div class="label">Reward</div>
+    <div class="value" id="unit-price">Loading…</div>
+  </div>
+
+  <div class="meta-item">
+    <div class="label">Premium</div>
+    <div class="value" id="is-premium">Loading…</div>
+  </div>
+
+  <div class="meta-item">
+    <div class="label">Progress</div>
+    <div class="value" id="progress">Loading…</div>
+  </div>
+</div>
+
+      <div class="meta-item">
+        <div class="label">Task Link</div>
+        <div class="value">
+          <a id="task-link" href="#" target="_blank">
+            <i class="fas fa-external-link-alt"></i> Open Link
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="upload-section">
+      <h2 class="section-title">
+        <i class="fas fa-cloud-upload-alt"></i> Upload Screenshot Evidence
+      </h2>
+
+      <form id="evidence-form" novalidate>
+        <input type="hidden" id="task-id" name="task-id" />
+
+        <div
+          class="file-upload-area"
+          onclick="document.getElementById('screenshot').click()"
+          >
+          <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+          <div class="upload-text">Click or drag & drop image</div>
+          <div class="upload-subtext">(PNG, JPG – max 5 MB)</div>
+        </div>
+
+        <!-- Remove required so browser doesn't block hidden input -->
+        <input
+          type="file"
+          id="screenshot"
+          accept="image/png, image/jpeg"
+          style="display:none"
+        />
+
+        <div class="preview-container" id="preview-container" style="display:none">
+          <img id="preview" alt="Preview" />
+          <div class="preview-actions">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              onclick="removeImage()"
+            >
+              <i class="fas fa-times"></i> Remove
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              onclick="document.getElementById('screenshot').click()"
+            >
+              <i class="fas fa-sync-alt"></i> Change
+            </button>
+          </div>
+        </div>
+
+        <button
+          type="submit"
+          class="btn btn-primary"
+          style="width:100%; margin-top:1rem"
+        >
+          <i class="fas fa-paper-plane"></i> Submit Evidence
+        </button>
+      </form>
+
+      <div id="status-message" class="status"></div>
+    </div>
+  </div>
+
+  <script src="task-details.js"></script>
+</body>
+</html>

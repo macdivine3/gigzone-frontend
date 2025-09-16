@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Browse Tasks - GigZone</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Mobile Menu Toggle -->
+  <div class="menu-toggle">&#9776;</div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <h2>GigZone</h2>
+    <ul>
+      <li><a href="dashboard.html"><i class="fas fa-tachometer-alt"></i>Dashboard</a></li>
+      <li><a href="browse.html" class="active"><i class="fas fa-search"></i>Browse Tasks</a></li>
+      <li><a href="mytasks.html"><i class="fas fa-tasks"></i>My Tasks</a></li>
+      <li><a href="earnings.html"><i class="fas fa-dollar-sign"></i>Earnings</a></li>
+      <li><a href="wallet.html"><i class="fas fa-wallet"></i>Wallet</a></li>
+      <li><a href="profile.html"><i class="fas fa-user"></i>Profile</a></li>
+      <li><a href="referrals.html"><i class="fas fa-users"></i>Referrals</a></li>
+      <li><a href="#" id="logout-link"><i class="fas fa-sign-out-alt"></i>Log Out</a></li>
+    </ul>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <header>
+      <h1>Browse Tasks</h1>
+      <p>Find the perfect gig for you</p>
+    </header>
+
+    <!-- Filters & Search -->
+    <div class="glass-card filters-container">
+      <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="Search for tasks..." class="referral-input" />
+      </div>
+      <div class="filters">
+        <select id="categoryFilter" class="referral-input">
+          <option value="">All Categories</option>
+          <!-- dynamic categories if desired -->
+        </select>
+        <select id="typeFilter" class="referral-input">
+          <option value="">Task Type</option>
+          <option value="free">Free</option>
+          <option value="premium">Premium</option>
+        </select>
+        <select id="sortFilter" class="referral-input">
+          <option value="">Sort By</option>
+          <option value="newest">Latest Posted</option>
+          <option value="oldest">Oldest Posted</option>
+          <option value="price_high">Price: High to Low</option>
+          <option value="price_low">Price: Low to High</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Upload Button -->
+    <div id="uploadTaskSection" class="upload-section">
+      <button id="uploadTaskBtn" class="btn btn-primary">
+        <i class="fas fa-upload" style="margin-right:8px;"></i>Upload a Task
+      </button>
+    </div>
+
+    <!-- Task List -->
+    <div id="tasksList" class="task-cards-container"></div>
+
+    <!-- Pagination Controls -->
+    <div id="paginationControls" class="pagination"></div>
+  </main>
+
+  <!-- Verify Popup -->
+  <div id="verifyPopup" class="popup-overlay" hidden>
+    <div class="popup-content">
+      <h3>Verify Your Account</h3>
+      <p>You need a verified account (₦1200) to perform premium tasks or upload.</p>
+      <button id="cancelPopup" class="btn">Cancel</button>
+      <button id="goVerify" class="btn btn-primary">Verify Now</button>
+    </div>
+  </div>
+
+  <!-- Include Supabase client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // Initialize Supabase
+    const SUPABASE_URL = "https://fwwbsoesxijhhpzpdjou.supabase.co";
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3d2Jzb2VzeGlqaGhwenBkam91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1NzA0MzEsImV4cCI6MjA2ODE0NjQzMX0.qELrGVrVdug3q53cxNGStsFEfLcb7N-lVS9u3qu6HEE';
+  const { createClient } = window.supabase;
+  const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+    // State
+    let filters = { search: '', category: '', type: '', sort: '' };
+    let currentPage = 1;
+    const pageSize = 7;
+    let userIsVerified = false;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Check user and verification
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase.from('profiles').select('is_verified').eq('id', user.id).single();
+        userIsVerified = profile?.is_verified;
+      }
+      initUploadTaskButton();
+      initFilterInputs();
+      initPopupHandlers();
+      initMobileSidebarToggle();
+      fetchTasks();
+    });
+
+    // Upload button logic
+    function initUploadTaskButton() {
+      document.getElementById('uploadTaskBtn').addEventListener('click', () => {
+        if (!userIsVerified) showVerifyPopup();
+        else window.location.href = 'upload-task.html';
+      });
+    }
+
+    // Filter inputs
+    function initFilterInputs() {
+      document.getElementById('searchInput').addEventListener('input', e => updateFilter('search', e.target.value));
+      document.getElementById('categoryFilter').addEventListener('change', e => updateFilter('category', e.target.value));
+      document.getElementById('typeFilter').addEventListener('change', e => updateFilter('type', e.target.value));
+      document.getElementById('sortFilter').addEventListener('change', e => updateFilter('sort', e.target.value));
+    }
+    function updateFilter(key, value) {
+      filters[key] = value;
+      currentPage = 1;
+      fetchTasks();
+    }
+
+    // Fetch tasks from view
+    async function fetchTasks() {
+      let query = supabase
+        .from('tasks_with_details')
+        .select('*', { count: 'exact' });
+
+      if (filters.search) query = query.ilike('title', `%${filters.search}%`);
+      if (filters.category) query = query.eq('category', filters.category);
+      if (filters.type) query = query.eq('is_premium', filters.type === 'premium');
+
+      // Sorting map
+      const orderMap = {
+        newest: { col: 'created_at', asc: false },
+        oldest: { col: 'created_at', asc: true },
+        price_high: { col: 'unit_price', asc: false },
+        price_low: { col: 'unit_price', asc: true }
+      };
+      const sortOpt = orderMap[filters.sort] || { col: 'created_at', asc: false };
+      query = query.order(sortOpt.col, { ascending: sortOpt.asc });
+
+      // Pagination
+      const from = (currentPage - 1) * pageSize;
+      const to = currentPage * pageSize - 1;
+      query = query.range(from, to);
+
+      const { data, count, error } = await query;
+      if (error) return console.error('Fetch error:', error);
+
+      renderTasks(data);
+      renderPagination(count);
+    }
+
+    // Render task cards
+    function renderTasks(tasks) {
+      const container = document.getElementById('tasksList');
+      container.innerHTML = '';
+      tasks.forEach(task => {
+        const card = document.createElement('div');
+        card.className = 'glass-card task-card';
+        const progressPct = Math.min((task.completed_count / task.max_earners) * 100, 100);
+        card.innerHTML = `
+          <h3>${task.title}</h3>
+          <p>₦${task.unit_price} <span class="small">(${task.subcategory_label})</span></p>
+          ${task.is_premium ? '<span class="badge premium">Premium</span>' : ''}
+          ${task.is_new ? '<span class="badge new">New</span>' : ''}
+          <div class="progress-bar"><div class="progress" style="width:${progressPct}%"></div></div>
+          <button class="btn btn-primary" onclick="handleApplyNow('${task.id}')">
+            <i class="fas fa-paper-plane" style="margin-right:8px;"></i>Apply Now
+          </button>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // Render pagination
+    function renderPagination(total) {
+      const totalPages = Math.ceil(total / pageSize);
+      const pag = document.getElementById('paginationControls');
+      pag.innerHTML = '';
+      if (totalPages === 0) return pag.textContent = 'No tasks found';
+
+      const prev = document.createElement('button'); prev.textContent = 'Prev'; prev.disabled = currentPage === 1;
+      prev.addEventListener('click', () => { currentPage--; fetchTasks(); }); pag.appendChild(prev);
+
+      for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement('button'); btn.textContent = i; btn.disabled = i === currentPage;
+        btn.addEventListener('click', () => { currentPage = i; fetchTasks(); }); pag.appendChild(btn);
+      }
+
+      const next = document.createElement('button'); next.textContent = 'Next'; next.disabled = currentPage === totalPages;
+      next.addEventListener('click', () => { currentPage++; fetchTasks(); }); pag.appendChild(next);
+    }
+
+    // Handle Apply Now navigation
+    function handleApplyNow(id) {
+      if (!userIsVerified) showVerifyPopup();
+      else window.location.href = `task-details.html?id=${id}`;
+    }
+
+    // Popup handlers
+    function initPopupHandlers() {
+      document.getElementById('cancelPopup').addEventListener('click', () => document.getElementById('verifyPopup').hidden = true);
+      document.getElementById('goVerify').addEventListener('click', () => window.location.href = 'verify.html');
+    }
+
+    function showVerifyPopup() { document.getElementById('verifyPopup').hidden = false; }
+
+    // Sidebar toggle
+    function initMobileSidebarToggle() {
+      document.querySelector('.menu-toggle').addEventListener('click', () => {
+        document.querySelector('.sidebar').classList.toggle('open');
+      });
+    }
+  </script>
+</body>
+</html>
+<script>
+    // Logout functionality
+    document.getElementById('logout-link').addEventListener('click', async (e) => {
+      e.preventDefault();
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        alert('Logout failed: ' + error.message);
+      } else {
+        window.location.href = 'login.html';
+      }
+    });
+  </script>

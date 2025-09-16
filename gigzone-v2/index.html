@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GigZone - Complete Tasks, Earn Cash</title>
+  <link rel="stylesheet" href="landing.css">
+</head>
+<body>
+  <!-- Overlay -->
+  <div class="overlay" id="overlay"></div>
+
+  <!-- Mobile Sidebar -->
+  <div class="mobile-sidebar" id="mobileSidebar">
+    <nav>
+      <a href="#home">Home</a>
+      <a href="#about">About</a>
+      <a href="#how-it-works">How it Works</a>
+      <a href="#testimonials">Reviews</a>
+      <a href="#contact">Contact</a>
+    </nav>
+  </div>
+
+  <!-- Navbar -->
+  <header>
+    <div class="navbar">
+      <h1 class="logo">GigZone</h1>
+      
+      <!-- Desktop Navigation -->
+      <nav class="desktop-nav">
+        <a href="#home">Home</a>
+        <a href="#about">About</a>
+        <a href="#how-it-works">How it Works</a>
+        <a href="#testimonials">Reviews</a>
+        <a href="#contact">Contact</a>
+      </nav>
+
+      <!-- Mobile Menu Toggle -->
+      <div class="mobile-menu-toggle" id="mobileMenuToggle">
+        <div class="hamburger-line"></div>
+        <div class="hamburger-line"></div>
+        <div class="hamburger-line"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero" id="home">
+    <h2>Complete Small Tasks. Earn Cash. Simple.</h2>
+    <p>Welcome to GigZone — a platform that connects clients with freelancers ready to complete simple tasks and get paid.</p>
+    <div class="hero-buttons">
+      <a href="signup.html" class="btn btn-primary">Get Started</a>
+      <button class="btn btn-secondary">Become a Tasker</button>
+    </div>
+  </section>
+
+  <!-- About Section -->
+  <section class="about" id="about">
+    <div class="about-text">
+      <h2>About GigZone</h2>
+      <p>GigZone is a micro-tasking platform that connects people who want to earn money online by completing simple tasks. We aim to create job opportunities for young people in Nigeria and across Africa.</p>
+      <p>Whether you're a student, job seeker, or just need extra income, GigZone is built for you.</p>
+    </div>
+    <div class="about-image">
+      GigZone
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section class="how-it-works" id="how-it-works">
+    <h2>How It Works</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-icon">1</div>
+        <h3>Sign Up</h3>
+        <p>Create your free GigZone account in minutes.</p>
+      </div>
+      <div class="step">
+        <div class="step-icon">2</div>
+        <h3>Browse Gigs</h3>
+        <p>Find simple tasks that match your skills and location.</p>
+      </div>
+      <div class="step">
+        <div class="step-icon">3</div>
+        <h3>Complete & Earn</h3>
+        <p>Finish the task, mark it done, and receive your payment.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonials -->
+  <section class="testimonials" id="testimonials">
+    <h2>What Our Users Say</h2>
+    <div class="testimonial-grid">
+      <div class="testimonial-card">
+        <p>GigZone helped me earn extra cash during school — it's legit!</p>
+        <span>— Amina, Lagos</span>
+      </div>
+      <div class="testimonial-card">
+        <p>Simple to use and the payouts are fast. I love it!</p>
+        <span>— Chinedu, Abuja</span>
+      </div>
+      <div class="testimonial-card">
+        <p>I just completed my first 3 gigs and got paid in 24hrs. Real deal!</p>
+        <span>— Tosin, Ibadan</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Call to Action -->
+  <section class="cta" id="contact">
+    <h2>Ready to Start Earning?</h2>
+    <p>Join GigZone today and start completing tasks for cash.</p>
+    <div class="cta-buttons">
+      <a href="signup.html" class="primary-btn">Get Started</a>
+      <button class="secondary-btn">Become a Tasker</button>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <p>&copy; 2025 GigZone. All rights reserved.</p>
+      <p>Made by +2349153382504 in Nigeria</p>
+      <p>contact also officialgigzone@gmail.com</p>
+    </div>
+  </footer>
+
+  <script>
+    // Mobile menu functionality
+    const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+    const mobileSidebar = document.getElementById('mobileSidebar');
+    const overlay = document.getElementById('overlay');
+
+    function toggleMobileMenu() {
+      mobileMenuToggle.classList.toggle('active');
+      mobileSidebar.classList.toggle('active');
+      overlay.classList.toggle('active');
+      
+      // Prevent body scrolling when menu is open
+      if (mobileSidebar.classList.contains('active')) {
+        document.body.style.overflow = 'hidden';
+      } else {
+        document.body.style.overflow = 'auto';
+      }
+    }
+
+    function closeMobileMenu() {
+      mobileMenuToggle.classList.remove('active');
+      mobileSidebar.classList.remove('active');
+      overlay.classList.remove('active');
+      document.body.style.overflow = 'auto';
+    }
+
+    mobileMenuToggle.addEventListener('click', toggleMobileMenu);
+    overlay.addEventListener('click', closeMobileMenu);
+
+    // Close menu when clicking on sidebar links
+    document.querySelectorAll('.mobile-sidebar a').forEach(link => {
+      link.addEventListener('click', closeMobileMenu);
+    });
+
+    // Smooth scrolling for navigation links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      });
+    });
+
+    // Enhanced navbar scroll effect
+    window.addEventListener('scroll', function() {
+      const navbar = document.querySelector('.navbar');
+      if (window.scrollY > 50) {
+        navbar.style.background = 'rgba(255, 255, 255, 0.98)';
+        navbar.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.1)';
+      } else {
+        navbar.style.background = 'rgba(255, 255, 255, 0.95)';
+        navbar.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)';
+      }
+    });
+
+    // Close mobile menu on window resize if it gets too wide
+    window.addEventListener('resize', function() {
+      if (window.innerWidth > 768 && mobileSidebar.classList.contains('active')) {
+        closeMobileMenu();
+      }
+    });
+  </script>
+</body>
+</html>

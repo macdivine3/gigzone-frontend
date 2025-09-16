@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Earnings - GigZone</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <div class="menu-toggle">&#9776;</div>
+  <aside class="sidebar">
+    <h2>GigZone</h2>
+    <ul>
+      <li><a href="dashboard.html"><i class="fas fa-tachometer-alt"></i>Dashboard</a></li>
+      <li><a href="browse.html"><i class="fas fa-search"></i>Browse Tasks</a></li>
+      <li><a href="mytasks.html"><i class="fas fa-tasks"></i>My Tasks</a></li>
+      <li><a href="earnings.html" class="active"><i class="fas fa-dollar-sign"></i>Earnings</a></li>
+      <li><a href="wallet.html"><i class="fas fa-wallet"></i>Wallet</a></li>
+      <li><a href="profile.html"><i class="fas fa-user"></i>Profile</a></li>
+      <li><a href="referrals.html"><i class="fas fa-users"></i>Referrals</a></li>
+      <li><a href="#" id="logout-link"><i class="fas fa-sign-out-alt"></i>Log Out</a></li>
+    </ul>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <header>
+      <h1>Earnings Overview</h1>
+      <p>Track all your earnings and withdrawal activity</p>
+    </header>
+
+    <!-- Earnings Summary Cards -->
+    <div class="earnings-summary">
+      <div class="earning-card">
+        <i class="fas fa-chart-line icon"></i>
+        <h3>Total Earnings</h3>
+         <p class="total-earnings">₦0.00</p> <!-- ADDED CLASS -->
+      </div>
+      <div class="earning-card">
+        <i class="fas fa-wallet icon"></i>
+        <h3>Withdrawable Balance</h3>
+        <p class="wallet-balance">₦0.00</p> <!-- ADDED CLASS -->
+      </div>
+      <div class="earning-card">
+        <i class="fas fa-gift icon"></i>
+        <h3>Referral Bonus</h3>
+        <p class="referral-earnings">₦0.00</p> <!-- ADDED CLASS -->
+      </div>
+    </div>
+
+    <!-- Earnings Breakdown -->
+    <div class="glass-card">
+      <h2 class="section-title">Earnings Breakdown</h2>
+      <div class="earnings-breakdown">
+        <ul>
+          <li>
+            <span><i class="fas fa-tasks" style="margin-right: 10px; color: var(--primary-color);"></i>Tasks Completed</span>
+            <span class="withdrawal-amount">₦0.00</span>
+          </li>
+          <li>
+            <span><i class="fas fa-users" style="margin-right: 10px; color: var(--success-color);"></i>Referral Bonuses</span>
+            <span class="withdrawal-amount">₦0.00</span>
+          </li>
+          <li>
+            <span><i class="fas fa-star" style="margin-right: 10px; color: var(--warning-color);"></i>Achievement Bonuses</span>
+            <span class="withdrawal-amount">₦0.00</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Referral Section -->
+    <div class="referral-section">
+      <h3><i class="fas fa-share-alt" style="margin-right: 10px;"></i>Your Referral Link</h3>
+      <div class="referral-input-group">
+        <input type="text" class="referral-input" value="" readonly id="referralLink" />
+        <button class="btn btn-primary" onclick="copyReferral()">
+          <i class="fas fa-copy" style="margin-right: 8px;"></i>Copy Link
+        </button>
+      </div>
+      <p style="color: var(--gray-600); font-size: 14px;">
+        <i class="fas fa-info-circle" style="margin-right: 5px;"></i>
+        Earn ₦700 for each verified referral!
+      </p>
+    </div>
+
+    <!-- Withdrawal History -->
+    <div class="glass-card">
+      <div class="section recent-withdrawals">
+  <h3><i class="fas fa-clock" style="margin-right: 10px;"></i>Recent Withdrawals</h3>
+  <ul class="withdrawal-list">
+    <!-- Withdrawals will be inserted dynamically here by JS -->
+  </ul>
+</div>
+
+      </div>
+    </div>
+
+    <!-- Verification Reminder -->
+    <div class="verify-reminder">
+      <p><i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i>
+        <strong>Verification Required:</strong> You must <a href="verify.html">get verified</a> to withdraw earnings without limits. 
+      </p>
+      <button class="btn btn-secondary get-verified-btn">
+  <i class="fas fa-shield-alt" style="margin-right: 8px;"></i>Get Verified (₦1,200)
+</button>
+
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="glass-card">
+      <h2 class="section-title">Quick Actions</h2>
+      <div style="display: flex; gap: var(--spacing-md); flex-wrap: wrap;">
+        <button class="btn btn-primary"button onclick="handleWithdraw()" class="wallet-btn withdraw">
+          <i class="fas fa-download" style="margin-right: 8px;"></i>Withdraw Funds
+        </button>
+        <button class="btn btn-outline">
+          <i class="fas fa-file-download" style="margin-right: 8px;"></i>Download Statement
+        </button>
+        <button class="btn btn-outline">
+          <i class="fas fa-chart-bar" style="margin-right: 8px;"></i>View Analytics
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Mobile menu toggle
+    const menuToggle = document.querySelector('.menu-toggle');
+    const sidebar = document.querySelector('.sidebar');
+
+    menuToggle.addEventListener('click', () => {
+      sidebar.classList.toggle('open');
+    });
+
+    // Copy referral link function
+    function copyReferral() {
+      const input = document.getElementById('referralLink');
+      const button = input.nextElementSibling;
+      
+      // Select and copy the text
+      input.select();
+      input.setSelectionRange(0, 99999); // For mobile devices
+      
+      try {
+        navigator.clipboard.writeText(input.value).then(() => {
+          // Success feedback
+          button.innerHTML = '<i class="fas fa-check" style="margin-right: 8px;"></i>Copied!';
+          button.classList.add('copy-success');
+          button.style.background = 'var(--success-gradient)';
+          
+          // Reset after 2 seconds
+          setTimeout(() => {
+            button.innerHTML = '<i class="fas fa-copy" style="margin-right: 8px;"></i>Copy Link';
+            button.classList.remove('copy-success');
+            button.style.background = 'var(--primary-gradient)';
+          }, 2000);
+        });
+      } catch (err) {
+        // Fallback for older browsers
+        document.execCommand('copy');
+        button.innerHTML = '<i class="fas fa-check" style="margin-right: 8px;"></i>Copied!';
+        button.style.background = 'var(--success-gradient)';
+        
+        setTimeout(() => {
+          button.innerHTML = '<i class="fas fa-copy" style="margin-right: 8px;"></i>Copy Link';
+          button.style.background = 'var(--primary-gradient)';
+        }, 2000);
+      }
+    }
+
+    // Logout functionality
+    document.getElementById('logout-link').addEventListener('click', (e) => {
+      e.preventDefault();
+      if (confirm('Are you sure you want to log out?')) {
+        // Add logout logic here
+        console.log('Logging out...');
+      }
+    });
+
+    // Add loading states to buttons
+    document.querySelectorAll('.btn').forEach(button => {
+      if (button.onclick === copyReferral) return; // Skip copy button
+      
+      button.addEventListener('click', function() {
+        if (this.classList.contains('loading')) return;
+        
+        this.classList.add('loading');
+        const originalText = this.innerHTML;
+        this.innerHTML = '<div class="spinner"></div>Processing...';
+        
+        // Simulate API call
+        setTimeout(() => {
+          this.classList.remove('loading');
+          this.innerHTML = originalText;
+        }, 1500);
+      });
+    });
+
+    // Animate cards on scroll
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }
+      });
+    }, observerOptions);
+
+    // Observe all cards
+    document.querySelectorAll('.earning-card, .glass-card').forEach(card => {
+      card.style.opacity = '0';
+      card.style.transform = 'translateY(20px)';
+      card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+      observer.observe(card);
+    });
+
+    // Close sidebar when clicking outside on mobile
+    document.addEventListener('click', (e) => {
+      if (window.innerWidth <= 768 && sidebar.classList.contains('open')) {
+        if (!sidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+          sidebar.classList.remove('open');
+        }
+      }
+    });
+
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+<script>
+  const SUPABASE_URL = "https://fwwbsoesxijhhpzpdjou.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3d2Jzb2VzeGlqaGhwenBkam91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1NzA0MzEsImV4cCI6MjA2ODE0NjQzMX0.qELrGVrVdug3q53cxNGStsFEfLcb7N-lVS9u3qu6HEE";
+  window.supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+       // Handle Withdraw button click
+  async function handleWithdraw() {
+    const supabase = window.supabaseClient;
+    
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (error || !user) {
+    alert("You must be logged in.");
+    return;
+  }
+
+  const { data, error: walletError } = await supabase
+    .from("wallets")
+    .select("bank_name, account_number")
+    .eq("user_id", user.id)
+    .single();
+
+  if (walletError) {
+    console.error("Error checking wallet:", walletError.message);
+    alert("Error checking bank account.");
+    return;
+  }
+
+  const bankLinked = data && data.bank_name && data.account_number;
+  window.location.href = bankLinked ? "withdraw.html" : "link-bank.html";
+}
+</script>
+
+<script src="earnings.js"></script>
+</body>

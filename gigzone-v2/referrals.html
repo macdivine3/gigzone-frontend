@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Referrals - GigZone</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Mobile Menu Toggle -->
+  <div class="menu-toggle">&#9776;</div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <h2>GigZone</h2>
+    <ul>
+      <li><a href="dashboard.html"><i class="fas fa-tachometer-alt"></i>Dashboard</a></li>
+      <li><a href="browse.html"><i class="fas fa-search"></i>Browse Tasks</a></li>
+      <li><a href="mytasks.html"><i class="fas fa-tasks"></i>My Tasks</a></li>
+      <li><a href="earnings.html"><i class="fas fa-dollar-sign"></i>Earnings</a></li>
+      <li><a href="wallet.html"><i class="fas fa-wallet"></i>Wallet</a></li>
+      <li><a href="profile.html"><i class="fas fa-user"></i>Profile</a></li>
+      <li><a href="referrals.html" class="active"><i class="fas fa-users"></i>Referrals</a></li>
+      <li><a href="#" id="logout-link"><i class="fas fa-sign-out-alt"></i>Log Out</a></li>
+    </ul>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <header>
+      <h1>Referral Program</h1>
+      <p>Share your link and earn ₦700 per verified user!</p>
+    </header>
+
+    <div class="referral-section">
+      <!-- Link Box -->
+      <h3>Your Referral Link</h3>
+      <div class="referral-input-group">
+        <input 
+          type="text" 
+          class="referral-input" 
+          value=" " 
+          readonly 
+          id="referralLink" 
+        />
+        <button class="btn btn-primary" onclick="copyReferral()">
+          <i class="fas fa-copy" style="margin-right:6px;"></i>Copy Link
+        </button>
+      </div>
+
+      <!-- Stats -->
+      <div class="glass-card">
+        <h2 class="section-title">Your Stats</h2>
+        <div class="earnings-breakdown">
+        <ul>
+      <li>
+        <span>Total Referrals</span>
+        <span id="totalReferrals">0</span>
+      </li>
+      <li>
+        <span>Total Earned</span>
+        <span id="totalEarned">₦0</span>
+      </li>
+      <li>
+        <span>Badge</span>
+        <span id="badgeLevel">Amateur Referrer</span>
+      </li>
+    </ul>
+  </div>
+</div>
+
+      <!-- Progress -->
+      <div class="glass-card">
+  <h2 class="section-title">Progress to Next Badge</h2>
+  <div style="margin-bottom: var(--spacing-md);">
+    <progress value="0" max="100" style="width: 100%; height: 1.5rem;"></progress>
+  </div>
+  <p id="progress-text" style="font-weight: 600;">Loading...</p>
+</div>
+            <!-- Referred Users List -->
+      <div class="glass-card">
+  <h2 class="section-title">Users You've Referred</h2>
+  <ul id="referredUsersList" class="withdrawal-history"></ul>
+  <button id="openReferralsModal" class="btn">See Your Referrals</button>
+</div>
+      <!-- History -->
+      <div class="glass-card">
+        <h2 class="section-title">Referral Bonus History</h2>
+        <ul id="bonusHistoryList" class="withdrawal-history">
+          <!-- Referral bonus History -->
+        </ul>
+      </div>
+  <!-- Referrals Modal -->
+<div id="referralsModal" class="modal-overlay hidden">
+  <div class="modal">
+    <header class="modal-header">
+      <h3>Your Referrals</h3>
+      <button id="closeReferralsModal" class="modal-close">&times;</button>
+    </header>
+    <div class="modal-body">
+      <table class="referrals-table">
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="referralsTableBody">
+          <!-- Populated by JS -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+</main>
+ <!-- Include Supabase client -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+  const SUPABASE_URL = "https://fwwbsoesxijhhpzpdjou.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3d2Jzb2VzeGlqaGhwenBkam91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1NzA0MzEsImV4cCI6MjA2ODE0NjQzMX0.qELrGVrVdug3q53cxNGStsFEfLcb7N-lVS9u3qu6HEE";
+  const { createClient } = window.supabase;
+  const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  async function loadReferralLink() {
+    const {
+      data: { user },
+      error: userError
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      alert("User not logged in.");
+      return;
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("referral_code")
+      .eq("id", user.id)
+      .single();
+
+    if (profileError || !profile) {
+      alert("Unable to fetch referral code.");
+      return;
+    }
+
+    const referralLink = `https://gigzone.com/signup?ref=${profile.referral_code}`;
+    document.getElementById("referralLink").value = referralLink;
+  }
+
+  function copyReferral() {
+    const input = document.getElementById("referralLink");
+    input.select();
+    input.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(input.value)
+      .then(() => alert("Referral link copied!"))
+      .catch(() => alert("Copy failed"));
+  }
+
+  // Sidebar toggle
+  const menuToggle = document.querySelector('.menu-toggle');
+  const sidebar = document.querySelector('.sidebar');
+  menuToggle.addEventListener('click', () => sidebar.classList.toggle('open'));
+
+     // Logout functionality
+    document.getElementById('logout-link')
+  .addEventListener('click', async e => {
+    e.preventDefault();
+    if (confirm('Log out?')) {
+      await supabase.auth.signOut();
+      window.location.href = "login.html"; // or your login page
+    }
+  });
+  // Load referral on page load
+  loadReferralLink();
+
+  async function listReferredUsers() {
+  // 1. Get current user
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) return;
+
+  // 2. Query the referrals table and join to profiles
+  const { data: referralsData, error: referralsError } = await supabase
+    .from('referrals')
+    .select(`
+      referred_user_id,
+      created_at,
+      profile:profiles!referrals_referred_user_id_fkey (
+        username,
+        email
+      )
+    `)
+    .eq('referrer_id', user.id);
+
+  if (referralsError) {
+    console.error('Error fetching referrals:', referralsError);
+    return;
+  }
+
+  // 3. Render the list
+  const listEl = document.getElementById('referredUsersList');
+  listEl.innerHTML = '';
+
+  if (referralsData.length === 0) {
+    listEl.innerHTML = '<li>No referred users yet.</li>';
+    return;
+  }
+
+  referralsData.forEach((ref, idx) => {
+    const li = document.createElement('li');
+    const date = new Date(ref.created_at).toLocaleDateString();
+    li.innerHTML = `
+      <span>${ref.profile.username} (${ref.profile.email})</span>
+      <span>${date}</span>
+    `;
+    listEl.appendChild(li);
+  });
+}
+// Re‑invoke the function to populate the list
+listReferredUsers();
+
+async function loadReferralStats() {
+  // 1. Get current user
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) return;
+
+  // 2. Query referrals with a join to profiles to get is_verified
+  const { data: referralsData, error: referralsError } = await supabase
+    .from('referrals')
+    .select(`
+      referred_user_id,
+      profile:profiles!referrals_referred_user_id_fkey (
+        is_verified
+      )
+    `)
+    .eq('referrer_id', user.id);
+
+  if (referralsError) {
+    console.error('Error fetching referral stats:', referralsError);
+    return;
+  }
+
+  // 3. Compute totals
+  const totalReferrals = referralsData.length;
+  // Count only those where is_verified === true
+  const verifiedCount = referralsData.filter(r => r.profile.is_verified).length;
+  const totalEarned = verifiedCount * 700;
+
+  // 4. Update the DOM
+  document.getElementById('totalReferrals').textContent = totalReferrals;
+  document.getElementById('totalEarned').textContent = `₦${totalEarned.toLocaleString()}`;
+
+    // … earlier in loadReferralStats …
+
+  // 5. Dynamically fetch current affiliate badge tier
+  const { data: badgeData, error: badgeErr } = await supabase
+    .from('user_badges')
+    .select('tier')
+    .eq('user_id', user.id)
+    .eq('role', 'affiliate')
+    .maybeSingle();
+
+  const badgeLabel = badgeData?.tier
+    ? `${badgeData.tier} Referrer`
+    : 'No badge yet';
+
+  // 6. Update only the badge span
+  document.getElementById('badgeLevel').textContent = badgeLabel;
+}
+
+// --- Modal open/close handlers ---
+const openBtn  = document.getElementById('openReferralsModal');
+const closeBtn = document.getElementById('closeReferralsModal');
+const modal    = document.getElementById('referralsModal');
+
+openBtn.addEventListener('click', () => {
+  modal.classList.remove('hidden');
+  populateReferralsTable();
+});
+closeBtn.addEventListener('click', () => {
+  modal.classList.add('hidden');
+});
+
+// --- Populate the table when modal opens ---
+async function populateReferralsTable() {
+  // 1. Get current user
+  const { data: { user }, error: userErr } = await supabase.auth.getUser();
+  if (userErr || !user) return;
+
+  // 2. Fetch referred users
+  const { data: referralsData, error } = await supabase
+    .from('referrals')
+    .select(`
+      referred_user_id,
+      profile:profiles!referrals_referred_user_id_fkey (
+        username,
+        email,
+        is_verified
+      )
+    `)
+    .eq('referrer_id', user.id);
+
+  if (error) {
+    console.error('Error fetching referrals for table:', error);
+    return;
+  }
+
+  // 3. Build rows
+  const tbody = document.getElementById('referralsTableBody');
+  tbody.innerHTML = ''; // clear existing
+
+  if (referralsData.length === 0) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td colspan="3">No referrals yet.</td>`;
+    tbody.appendChild(tr);
+    return;
+  }
+
+  referralsData.forEach(ref => {
+    const { username, email, is_verified } = ref.profile;
+    const statusText = is_verified ? 'Verified' : 'Non-verified';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${username}</td>
+      <td>${email}</td>
+      <td>${statusText}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+
+// Finally, call it
+loadReferralStats();
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadReferralLink();
+  listReferredUsers();
+  loadReferralStats();
+  loadReferralHistory(); 
+});
+
+async function loadReferralHistory() {
+  // 1. Ensure user is signed in
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) return;
+
+  // 2. Fetch referrals with join to profiles
+  const { data: referralsData, error } = await supabase
+    .from('referrals')
+    .select(`
+      created_at,
+      profile:profiles!referrals_referred_user_id_fkey (
+        username,
+        is_verified
+      )
+    `)
+    .eq('referrer_id', user.id);
+
+  if (error) {
+    console.error('Failed to fetch referral history:', error);
+    return;
+  }
+
+  // 3. Filter to only verified referrals (paid)
+  const paidReferrals = referralsData.filter(r => r.profile.is_verified);
+
+  // 4. Render into the history list
+  const historyEl = document.getElementById('bonusHistoryList');
+  historyEl.innerHTML = '';
+
+  if (paidReferrals.length === 0) {
+    historyEl.innerHTML = '<li>No bonuses yet.</li>';
+    return;
+  }
+
+  paidReferrals.forEach((ref, idx) => {
+    const li = document.createElement('li');
+    const date = new Date(ref.created_at).toLocaleDateString();
+    li.innerHTML = `  
+      <span>₦700 — Referred ${ref.profile.username}</span>
+      <span class="withdrawal-date">${date}</span>
+    `;
+    historyEl.appendChild(li);
+  });
+}
+const BADGE_TIERS = {
+  affiliate: [
+    { tier: 'Beginner', threshold: 3, reward: 0 },
+    { tier: 'Amateur', threshold: 10, reward: 0 },
+    { tier: 'Regular', threshold: 25, reward: 0 },
+    { tier: 'Top', threshold: 50, reward: 10000 },
+    { tier: 'Elite', threshold: 100, reward: 20000 }
+  ]
+};
+
+async function updateReferralProgress() {
+  const { data: { user }, error: userErr } = await supabase.auth.getUser();
+if (userErr || !user) return;
+
+  // 1. Fetch the user's referral_count from profiles
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('referrals_count')
+    .eq('id', user.id)
+    .single();
+
+  if (error || !data) {
+    console.error('Error fetching referral count:', error);
+    return;
+  }
+
+  const referralCount = data.referral_count ?? 0;
+  const tiers = BADGE_TIERS.affiliate;
+
+  // 2. Find the next tier they haven't reached
+  const nextTier = tiers.find(t => referralCount < t.threshold);
+
+  // 3. Grab your <progress> and text
+  const progressBar  = document.querySelector('progress');
+  const progressText = document.getElementById('progress-text');
+
+  if (!progressBar || !progressText) return;
+
+  // 4. Update UI
+  if (nextTier) {
+    progressBar.value = referralCount;
+    progressBar.max   = nextTier.threshold;
+    const remaining = nextTier.threshold - referralCount;
+    progressText.textContent = `${remaining} more to become ${nextTier.tier} Referrer`;
+  } else {
+    progressBar.value = referralCount;
+    progressBar.max   = referralCount;
+    progressText.textContent = `You've reached the highest badge tier! 🎉`;
+  }
+}
+
+// 5. Call it on page load
+document.addEventListener('DOMContentLoaded', updateReferralProgress);
+</script>
+</body>
+</html>

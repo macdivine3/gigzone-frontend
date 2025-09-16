@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Tasks - Freelancer | GigZone</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 280px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-right: 1px solid rgba(255, 255, 255, 0.2);
+      min-height: 100vh;
+      padding: 30px 0;
+      position: fixed;
+      left: 0;
+      top: 0;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 999;
+      box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .sidebar h2 {
+      color: #4f46e5;
+      font-size: 28px;
+      font-weight: 800;
+      margin: 0 30px 40px;
+      text-align: center;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .sidebar ul {
+      list-style: none;
+      padding: 0 20px;
+    }
+
+    .sidebar ul li {
+      margin: 8px 0;
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .sidebar ul li:hover {
+      transform: translateX(8px);
+    }
+
+    .sidebar ul li a {
+      display: flex;
+      align-items: center;
+      text-decoration: none;
+      color: #374151;
+      font-weight: 600;
+      padding: 16px 20px;
+      border-radius: 12px;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sidebar ul li a.active {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      transform: scale(1.02);
+    }
+
+    .sidebar ul li a::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .sidebar ul li a:hover::before {
+      left: 100%;
+    }
+
+    .sidebar ul li a:hover {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      transform: scale(1.02);
+    }
+
+    .sidebar ul li a i {
+      margin-right: 12px;
+      font-size: 18px;
+      width: 20px;
+    }
+
+    /* Main Content */
+    .main-content {
+      margin-left: 280px;
+      padding: 40px;
+      width: calc(100% - 280px);
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      min-height: 100vh;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(20px);
+      padding: 20px 30px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    .badge {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      padding: 8px 20px;
+      border-radius: 25px;
+      font-weight: 700;
+      font-size: 14px;
+      display: inline-block;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+      animation: glow 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes glow {
+      from { box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3); }
+      to { box-shadow: 0 4px 25px rgba(102, 126, 234, 0.5); }
+    }
+
+    .topbar .icons {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .topbar .icons i {
+      font-size: 22px;
+      color: #667eea;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      padding: 12px;
+      border-radius: 50%;
+      background: rgba(102, 126, 234, 0.1);
+    }
+
+    .topbar .icons i:hover {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      transform: scale(1.1);
+    }
+
+    header {
+      margin-bottom: 30px;
+    }
+
+    header h1 {
+      color: white;
+      font-size: 42px;
+      font-weight: 800;
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    header p {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 18px;
+      font-weight: 500;
+    }
+
+    /* Task Summary Cards */
+    .task-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 25px;
+      margin-bottom: 40px;
+    }
+
+    .summary-card {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(20px);
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      text-align: center;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .summary-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      transform: scaleX(0);
+      transition: transform 0.3s ease;
+    }
+
+    .summary-card:hover::before {
+      transform: scaleX(1);
+    }
+
+    .summary-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    .summary-card h3 {
+      color: #667eea;
+      font-size: 32px;
+      font-weight: 800;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .summary-card p {
+      color: #6b7280;
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    /* Task History */
+    .task-history-container {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(20px);
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .task-history-container h2 {
+      color: #374151;
+      font-size: 28px;
+      font-weight: 800;
+      margin-bottom: 30px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .task-row {
+      background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+      padding: 25px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .task-row::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 5px;
+      height: 100%;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      transition: width 0.3s ease;
+    }
+
+    .task-row:hover::before {
+      width: 100%;
+      opacity: 0.1;
+    }
+
+    .task-row:hover {
+      transform: translateX(8px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .task-info h3 {
+      color: #374151;
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .task-info p {
+      color: #6b7280;
+      font-size: 16px;
+      margin-bottom: 0;
+    }
+
+    .task-meta {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+    }
+
+    .amount-earned {
+      font-weight: 800;
+      font-size: 20px;
+      color: #10b981;
+    }
+
+    .task-date {
+      color: #6b7280;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    /* Status Styles */
+    .status {
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .status.pending {
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+      color: white;
+      box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3);
+    }
+
+    .status.approved {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+    }
+
+    .status.rejected {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      color: white;
+      box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+    }
+
+    .status.completed {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    /* Filter Buttons */
+    .filter-buttons {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 25px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+
+    .filter-btn:hover,
+    .filter-btn.active {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+    }
+
+    /* Menu Toggle */
+    .menu-toggle {
+      display: none;
+      font-size: 28px;
+      cursor: pointer;
+      color: white;
+      position: fixed;
+      top: 30px;
+      left: 30px;
+      z-index: 1001;
+      padding: 10px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+    }
+
+    .menu-toggle:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: scale(1.1);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .menu-toggle {
+        display: block;
+      }
+
+      .sidebar {
+        transform: translateX(-100%);
+        width: 300px;
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .main-content {
+        margin-left: 0;
+        padding: 20px;
+        width: 100%;
+      }
+
+      .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+        padding: 20px;
+      }
+
+      .task-summary {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+
+      header h1 {
+        font-size: 32px;
+      }
+
+      .task-history-container {
+        padding: 25px;
+      }
+
+      .task-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+      }
+
+      .task-meta {
+        align-items: flex-start;
+        flex-direction: row;
+        justify-content: space-between;
+        width: 100%;
+      }
+
+      .filter-buttons {
+        justify-content: center;
+      }
+    }
+  </style>
+  <!-- Modal CSS -->
+<style>
+  #notif-modal {
+  position: fixed; top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.4);
+  align-items: center; justify-content: center;
+  z-index: 1000;
+
+  /* hide by default */
+  display: none;
+}
+
+#notif-modal.show {
+  display: flex;
+}
+  .modal-content {
+    background: #fff; border-radius: 8px;
+    padding: 20px; max-width: 400px; width: 90%;
+    max-height: 80%; overflow-y: auto; position: relative;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  }
+  .modal-close {
+    position: absolute; top: 10px; right: 15px;
+    font-size: 18px; cursor: pointer;
+  }
+  .notif-item { padding: 8px 0; border-bottom: 1px solid #eee; }
+</style>
+</head>
+<body>
+  <div class="menu-toggle" onclick="toggleSidebar()">
+    <i class="fas fa-bars"></i>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <h2>GigZone</h2>
+    <ul>
+      <li><a href="dashboard.html"><i class="fas fa-home"></i>Dashboard</a></li>
+      <li><a href="browse.html"><i class="fas fa-search"></i>Browse Tasks</a></li>
+      <li><a href="mytasks.html" class="active"><i class="fas fa-tasks"></i>My Tasks</a></li>
+      <li><a href="earnings.html"><i class="fas fa-chart-line"></i>Earnings</a></li>
+      <li><a href="wallet.html"><i class="fas fa-wallet"></i>Wallet</a></li>
+      <li><a href="profile.html"><i class="fas fa-user"></i>Profile</a></li>
+      <li><a href="referrals.html"><i class="fas fa-users"></i>Referrals</a></li>
+      <li><a href="#"><i class="fas fa-sign-out-alt"></i>Log Out</a></li>
+    </ul>
+  </div>
+
+ <!-- Main Content -->
+ <div class="main-content">
+  <div class="topbar">
+    <div class="badge">Freelancer Dashboard</div>
+   <div class="icons">
+        <div class="notification-wrapper" style="position: relative;">
+  <i id="notif-bell" class="fas fa-bell"></i>
+  <span id="notif-dot" style="
+    display:none;
+    background:red;
+    border-radius:50%;
+    width:10px; height:10px;
+    position:absolute; top:0; right:0;"></span>
+</div>
+        <i class="fas fa-envelope"></i>
+        <i class="fas fa-user-circle"></i>
+      </div>
+    </div>
+
+    <header>
+      <h1>My Tasks</h1>
+      <p>Track all the tasks you've worked on and their status</p>
+    </header>
+
+    <!-- Task Summary Cards -->
+    <div class="task-summary">
+      <div class="summary-card">
+        <h3 id="total-tasks">0</h3>
+        <p>Total Tasks</p>
+      </div>
+      <div class="summary-card">
+        <h3 id="completed-tasks">0</h3>
+        <p>Completed</p>
+      </div>
+      <div class="summary-card">
+        <h3 id="total-earned">₦0.00</h3>
+        <p>Total Earned</p>
+      </div>
+      <div class="summary-card">
+        <h3 id="on-hold">0</h3>
+        <p>Pending</p>
+      </div>
+    </div>
+
+    <!-- Filter Buttons -->
+    <div class="filter-buttons">
+      <button class="filter-btn active" onclick="filterTasks('all')">All Tasks</button>
+      <button class="filter-btn" onclick="filterTasks('pending')">Pending</button>
+      <button class="filter-btn" onclick="filterTasks('approved')">Approved</button>
+      <button class="filter-btn" onclick="filterTasks('rejected')">Rejected</button>
+    </div>
+
+    <!-- Task History -->
+    <div class="task-history-container">
+      <h2>Task History</h2>
+      <div class="task-history" id="taskHistory">
+        <!-- Dynamic task rows will be injected here -->
+      </div>
+    </div>
+  </div>
+  <!-- Notifications Modal -->
+<div id="notif-modal" class="hidden">
+  <div class="modal-content">
+    <span id="notif-close" class="modal-close">&times;</span>
+    <h2>Notifications</h2>
+    <div id="notif-modal-list">
+      <!-- injected by JS -->
+    </div>
+  </div>
+</div>
+
+  <!-- Supabase client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // Initialize Supabase
+    const supabaseClient = window.supabase.createClient(
+    'https://fwwbsoesxijhhpzpdjou.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3d2Jzb2VzeGlqaGhwenBkam91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1NzA0MzEsImV4cCI6MjA2ODE0NjQzMX0.qELrGVrVdug3q53cxNGStsFEfLcb7N-lVS9u3qu6HEE'
+  );
+
+  // Make it globally available
+  window.supabaseClient = supabaseClient;;
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      // 1. Ensure user is logged in
+      const { data: { user }, error: userErr } = await supabase.auth.getUser();
+      if (userErr || !user) return window.location.href = '/login.html';
+
+      // 2. Fetch submissions for this freelancer
+      const { data: submissions, error } = await supabase
+        .from('submissions_with_user_info')
+        .select('*')
+        .eq('freelancer_id', user.id);
+      if (error) return console.error('Fetch error:', error);
+
+      // 3. Compute summary stats
+      const totalTasks = submissions.length;
+      const completed = submissions.filter(s => s.status === 'approved').length;
+      const onHold = submissions.filter(s => s.status === 'pending' || s.status === 'on hold').length;
+      const totalEarned = submissions
+        .filter(s => s.status === 'approved')
+        .reduce((sum, s) => sum + (s.price || 0), 0);
+
+      // 4. Update cards
+      document.getElementById('total-tasks').textContent = totalTasks;
+      document.getElementById('completed-tasks').textContent = completed;
+      document.getElementById('on-hold').textContent = onHold;
+      document.getElementById('total-earned').textContent = `₦${totalEarned.toFixed(2)}`;
+
+      // 5. Render task history
+      const historyEl = document.getElementById('taskHistory');
+      historyEl.innerHTML = '';
+      submissions.forEach(sub => {
+        const row = document.createElement('div');
+        row.className = 'task-row';
+        row.dataset.status = sub.status;
+        row.innerHTML = `
+          <div class="task-info">
+            <h3>${sub.task_title}</h3>
+            <p>Status: <span class="status ${sub.status}">${sub.status}</span></p>
+          </div>
+          <div class="task-meta">
+            <span class="amount-earned">₦${sub.price}</span>
+            <span class="task-date">${new Date(sub.submitted_at).toLocaleDateString()}</span>
+          </div>`;
+        historyEl.appendChild(row);
+      });
+    });
+
+    // Sidebar toggle
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('open');
+    }
+
+    // Filter functionality
+    function filterTasks(status) {
+      document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      document.querySelectorAll('.task-row').forEach(row => {
+        row.style.display = (status === 'all' || row.dataset.status === status) ? 'flex' : 'none';
+      });
+    }
+     // Notification red dot
+    const redDot = document.getElementById('notif-dot');
+    redDot.style.display = 'block';
+    document.querySelector('.notification-wrapper').addEventListener('click', () => {
+      redDot.style.display = 'none';
+    });
+  </script>
+  <script src="js/notifications.js"></script>
+
+</body>
+</html>

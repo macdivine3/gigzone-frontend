@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Tasks - Client | GigZone</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Mobile Menu Toggle -->
+  <div class="menu-toggle">&#9776;</div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <h2>GigZone</h2>
+    <ul>
+      <li><a href="dashboard.html"><i class="fas fa-tachometer-alt"></i>Dashboard</a></li>
+      <li><a href="browse.html"><i class="fas fa-search"></i>Browse Tasks</a></li>
+      <li><a href="mytasks.html" class="active"><i class="fas fa-clipboard-list"></i>My Tasks</a></li>
+      <li><a href="earnings.html"><i class="fas fa-dollar-sign"></i>Earnings</a></li>
+      <li><a href="wallet.html"><i class="fas fa-wallet"></i>Wallet</a></li>
+      <li><a href="profile.html"><i class="fas fa-user"></i>Profile</a></li>
+      <li><a href="referrals.html"><i class="fas fa-users"></i>Referrals</a></li>
+      <li><a href="#" id="logout-link"><i class="fas fa-sign-out-alt"></i>Log Out</a></li>
+    </ul>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <header>
+      <h1>Uploaded Tasks (Client)</h1>
+      <p>Review your uploaded tasks and track performance</p>
+    </header>
+
+    <!-- Dynamic Task Cards Container -->
+    <div id="clientTasksContainer" class="task-history">
+      <!-- JS will render one <div class="glass-card"> per task -->
+    </div>
+
+    <!-- Pagination Controls -->
+    <div id="paginationControls" class="pagination"></div>
+  </main>
+
+<script>
+    // --- Initialize Supabase ---
+const SUPABASE_URL = "https://fwwbsoesxijhhpzpdjou.supabase.co";
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3d2Jzb2VzeGlqaGhwenBkam91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1NzAEsImV4cCI6MjA2ODE0NjQzMX0.qELrGVrVdug3q53cxNGStsFEfLcb7N-lVS9u3qu6HEE';
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// --- State & Pagination ---
+let currentPage = 1;
+const pageSize = 7;
+let userId;
+const container = docuent.getElementById('clientTasksContainer');
+const pagEl = document.getElementById('paginationControls');
+
+// --- On Load ---
+window.addEventListener('DOMContentLoaded', async () => {
+  const { data: sessionData } = await db.auth.getSession();
+  userId = sessionData.session?.user?.id;
+  if (!userId) {
+    container.innerHTML = '<p>Please log in to view your tasks.</p>';
+    return;
+  }
+  fetchClientTasks();
+});
+
+// --- Fetch & Render ---
+async function fetchClientTasks() {
+  // Base query (with count)
+  let query = db
+    .from('client_task_summary')
+    .select('*', { count: 'exact' })
+    .eq('client_id', userId);
+
+  // Sort newest first
+  query = query.order('created_at', { ascending: false });
+
+  // Pagination range
+  const from = (currentPage - 1) * pageSize;
+  const to   = from + pageSize - 1;
+  query = quey.range(from, to);
+
+  const { data, count, error } = await query;
+  if (error) {
+    container.inerHTML = `<p>Error loading tasks: ${error.message}</p>`;
+    return;
+  }
+
+  renderTasks(data);
+  renderPagination(count);
+}
+
+// --- Render Task Cards ---
+function renderTasks(tasks) {
+  if (!tasks || tasks.length === 0) {
+    container.innerHTML = '<p>No tasks uploaded yet.</p>';
+    return;
+  }
+
+  container.innerHTML = '';
+  tasks.forEach(t => {
+    const dateStr = new Date(t.created_at)
+      .toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
+    const card = document.createElement('div');
+    card.className = 'glass-card';
+    card.inneHTML = `
+      <div class="task-row">
+        <div class="task-info">
+          <h3>${t.title}</h3>
+          <p>Submissions: <strong>${t.submissions_count}</strong></p>
+        </div>
+        <div class="task-meta">
+          <span class="task-date">Uploaded: ${dateStr}</span>
+          <a href="submissn-review.html?task_id=${t.task_id}"
+             class="btn btn-primary" style="margin-left:1rem">
+            <i class="fas fa-eye" style="margin-right:6px"></i>View Submissions
+          </a>
+        </div>
+      </div>`;
+    container.appendChild(card);
+  });
+}
+
+// --- Render Pagination Controls ---
+function renderPagination(totalCount) {
+  const totalPages = Math.ceil(totalCount / pageSize);
+  pagEl.innerHTML = '';
+  if (totalPages <= 1) return;
+
+  // Prev
+  const prev = document.createElement('button');
+  prev.textContent = 'Prev';
+  prev.diabled = currentPage === 1;
+  prev.onclick = () => { currentPage--; fetchClientTasks(); };
+  pagEl.appendChild(prev);
+
+  // Page numbers
+  for (let i = 1; i <= totalPages; i++) {
+    const btn = document.createEleent('button');
+    btn.textContent = i;
+    btn.disaled = i === currentPage;
+    btn.onclick = () => { currentPage = i; fetchClientTasks(); };
+    pagEl.appendCild(btn);
+  }
+
+  // Next
+  const next = document.createElement('button');
+  next.textContent = 'Next';
+  next.disabled = currentPage === totalPages;
+  next.onclick = () => { currentPage++; fetchClientTasks(); };
+  pagEl.appendChild(next);
+}
+</script>
+
+  <script>
+    // Sidebar toggle
+    const menuToggle = document.querySelector('.menu-toggle');
+    const sidebar = document.querySlector('.sidebar');
+    menuToggle.addEventListener('click', () => sidebar.classList.toggle('open'));
+
+    // Logout link (you can wire this up to your auth logic)
+    document.getElementById('logout-link').addEventListener('click', e => {
+      e.preventDefault();
+      if (confirm('Are you sure you want to log out?')) {
+        // TODO: add logout handling
+        console.log('Logging out...');
+      }
+    });
+  </script>
+</body>
+</html>

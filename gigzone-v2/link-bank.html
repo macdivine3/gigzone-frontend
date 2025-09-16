@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Link Bank Account - GigZone</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://js.paystack.co/v1/inline.js"></script>
+  <style>
+    /* ===== Link Bank Account ===== */
+    .main-content {
+      margin-left: var(--sidebar-width);
+      padding: var(--spacing-2xl);
+    }
+
+    .bank-form {
+      max-width: 500px;
+      margin: 0 auto;
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-xl);
+      padding: var(--spacing-xl);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .bank-form h2 {
+      margin-bottom: var(--spacing-lg);
+      font-size: 1.5rem;
+      background: var(--primary-gradient);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-align: center;
+    }
+
+    .bank-form label {
+      display: block;
+      margin-bottom: var(--spacing-sm);
+      font-weight: 600;
+      color: var(--gray-700);
+    }
+
+    .bank-form select,
+    .bank-form input {
+      width: 100%;
+      padding: var(--spacing-md);
+      margin-bottom: var(--spacing-lg);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius-lg);
+      background: var(--white);
+      font-size: 1rem;
+      transition: border-color var(--transition-base), box-shadow var(--transition-base);
+    }
+
+    .bank-form select:focus,
+    .bank-form input:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+    }
+
+    .bank-form button {
+      width: 100%;
+      padding: var(--spacing-md);
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: var(--radius-full);
+      background: var(--primary-gradient);
+      color: var(--white);
+      cursor: pointer;
+      transition: transform var(--transition-base), box-shadow var(--transition-base);
+    }
+
+    .bank-form button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .bank-form button:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-primary);
+    }
+
+    .success-message {
+      color: var(--success-color);
+      margin-top: var(--spacing-md);
+      font-weight: 500;
+      text-align: center;
+    }
+
+    @media (max-width: 768px) {
+      .main-content {
+        margin-left: 0;
+        padding: var(--spacing-xl);
+      }
+    }
+  </style>
+</head>
+<body>
+  
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="bank-form">
+      <h2>Link Your Bank Account</h2>
+
+     <label for="bank-name">Bank Name</label>
+<select id="bank-name">
+  <option value="">-- Select Bank --</option>
+  <option value="044">Access Bank</option>
+  <option value="063">Access Bank (Diamond)</option>
+  <option value="023">Citibank</option>
+  <option value="050">Ecobank Nigeria</option>
+  <option value="011">First Bank of Nigeria</option>
+  <option value="214">First City Monument Bank (FCMB)</option>
+  <option value="058">Guaranty Trust Bank (GTBank)</option>
+  <option value="030">Heritage Bank</option>
+  <option value="301">Jaiz Bank</option>
+  <option value="082">Keystone Bank</option>
+  <option value="50211">Kuda Microfinance Bank</option>
+  <option value="526">Moniepoint MFB</option>
+  <option value="100002">PalmPay</option>
+  <option value="076">Polaris Bank</option>
+  <option value="101">Providus Bank</option>
+  <option value="125">Rubies MFB</option>
+  <option value="51310">Sparkle Microfinance Bank</option>
+  <option value="221">Stanbic IBTC Bank</option>
+  <option value="068">Standard Chartered Bank</option>
+  <option value="232">Sterling Bank</option>
+  <option value="100">Suntrust Bank</option>
+  <option value="302">TAJ Bank</option>
+  <option value="032">Union Bank of Nigeria</option>
+  <option value="033">United Bank for Africa (UBA)</option>
+  <option value="215">Unity Bank</option>
+  <option value="035">Wema Bank</option>
+  <option value="057">Zenith Bank</option>
+  <option value="090175">Opay</option>
+  <option value="090560">VFD MFB</option>
+  <option value="090136">Parallex Bank</option>
+</select>
+       
+      <label for="account-number">Account Number</label>
+      <input type="text" id="account-number" placeholder="e.g. 0123456789" maxlength="10" oninput="resolveAccountName()" />
+
+      <label for="account-name">Account Name</label>
+      <input type="text" id="account-name" placeholder="e.g. johnson david" />
+
+      <button id="save-bank-btn" onclick="saveBankDetails()">Save Bank Info</button>
+      <p class="success-message" id="success-msg"></p>
+    </div>
+  </main>
+
+   <!-- Include Supabase client -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+  const SUPABASE_URL = "https://fwwbsoesxijhhpzpdjou.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3d2Jzb2VzeGlqaGhwenBkam91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1NzA0MzEsImV4cCI6MjA2ODE0NjQzMX0.qELrGVrVdug3q53cxNGStsFEfLcb7N-lVS9u3qu6HEE";
+  const { createClient } = window.supabase;
+  const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // Save bank details with recipient_code creation
+  async function saveBankDetails() {
+    const btn = document.getElementById('save-bank-btn');
+    const bankCode = document.getElementById('bank-name').value;
+    const accountName = document.getElementById('account-name').value.trim();
+    const accountNumber = document.getElementById('account-number').value.trim();
+
+    if (!bankCode || !accountName || accountNumber.length !== 10) {
+      alert("Please fill all fields correctly.");
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "Creating recipient...";
+
+    try {
+      // ✅ Get currently logged in user
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+      if (userError || !user) {
+        console.error("❌ Failed to get user", userError);
+        alert("User not logged in.");
+        return;
+      }
+
+      // ✅ Save bank info to database first
+      const { error: bankError } = await supabase.from('wallets').upsert({
+        user_id: user.id,
+        bank_name: bankCode,
+        account_number: accountNumber,
+        account_name: accountName,
+      }, { onConflict: ['user_id'] });
+
+      if (bankError) throw bankError;
+
+      // ✅ Create recipient_code via backend
+      const recipientResponse = await fetch("http://localhost:3000/create-recipient", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          bankCode: bankCode,
+          accountNumber: accountNumber,
+          accountName: accountName
+        })
+      });
+
+      const recipientData = await recipientResponse.json();
+
+      if (!recipientResponse.ok || !recipientData.success) {
+        throw new Error(recipientData.error || "Failed to create recipient");
+      }
+
+      // ✅ Mark bank as linked
+      localStorage.setItem("bankLinked", "true");
+
+      document.getElementById('success-msg').textContent = "✅ Bank details saved with recipient code!";
+      setTimeout(() => { document.getElementById('success-msg').textContent = ""; }, 5000);
+
+    } catch (err) {
+      alert("Failed to save bank details: " + err.message);
+      console.error(err);
+    }
+
+    btn.disabled = false;
+    btn.textContent = "Save Bank Info";
+  }
+</script>
+<script>
+const PAYSTACK_PUBLIC_KEY = "pk_test_5173d2bf6acad7ca7700e752cdb89f3d4bf05776";
+
+async function resolveAccountName() {
+  const accountNumber = document.getElementById("account-number").value.trim();
+  const bankCode = document.getElementById("bank-name").value;
+  const accountNameInput = document.getElementById("account-name");
+
+  if (accountNumber.length === 10 && bankCode) {
+    accountNameInput.value = "Resolving...";
+    accountNameInput.disabled = true;
+
+    try {
+      const response = await fetch(`http://localhost:3000/resolve-account?account_number=${accountNumber}&bank_code=${bankCode}`);
+      const data = await response.json();
+
+      if (data.status && data.data?.account_name) {
+        // ✅ Success – autofill and lock input
+        accountNameInput.value = data.data.account_name;
+        accountNameInput.disabled = true;
+      } else {
+        // ❌ Fail – fallback to manual input
+        accountNameInput.value = "";
+        accountNameInput.placeholder = "Enter account name";
+        accountNameInput.disabled = false;
+      }
+    } catch (err) {
+      // ❌ Error – fallback silently
+      accountNameInput.value = "";
+      accountNameInput.placeholder = "Enter account name";
+      accountNameInput.disabled = false;
+      console.error("Resolve error:", err);
+    }
+  } else {
+    // Not enough info yet
+    accountNameInput.value = "";
+    accountNameInput.placeholder = "Enter account name";
+    accountNameInput.disabled = false;
+  }
+}
+</script>
+</body>
+</html>

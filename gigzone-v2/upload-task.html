@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Upload Task - GigZone</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ===== Upload Task Form ===== */
+    .upload-form {
+      max-width: 600px;
+      margin: var(--spacing-2xl) auto;
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-lg);
+      padding: var(--spacing-xl);
+    }
+
+    .upload-form h2 {
+      font-size: 1.5rem;
+      margin-bottom: var(--spacing-lg);
+      color: var(--gray-700);
+      text-align: center;
+      background: var(--primary-gradient);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .upload-form .form-group {
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .upload-form label {
+      display: block;
+      margin-bottom: var(--spacing-sm);
+      font-weight: 600;
+      color: var(--gray-700);
+    }
+
+    .upload-form input,
+    .upload-form textarea,
+    .upload-form select {
+      width: 100%;
+      padding: var(--spacing-md);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--gray-200);
+      font-family: var(--font-family);
+      font-size: 1rem;
+      color: var(--gray-700);
+      background: var(--white);
+      transition: border-color var(--transition-base), box-shadow var(--transition-base);
+    }
+
+    .upload-form input:focus,
+    .upload-form textarea:focus,
+    .upload-form select:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .upload-form button {
+      width: 100%;
+      padding: var(--spacing-md);
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: var(--radius-full);
+      background: var(--primary-gradient);
+      color: var(--white);
+      box-shadow: var(--shadow-primary);
+      cursor: pointer;
+      transition: transform var(--transition-base), box-shadow var(--transition-base);
+    }
+
+    .upload-form button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    }
+  </style>
+</head>
+<body>
+
+ <!-- Sidebar -->
+  <aside class="sidebar">
+    <h2>GigZone</h2>
+    <ul>
+      <li><a href="dashboard.html"><i class="fas fa-tachometer-alt"></i>Dashboard</a></li>
+      <li><a href="browse.html"><i class="fas fa-search"></i>Browse Tasks</a></li>
+      <li><a href="mytasks.html"><i class="fas fa-tasks"></i>My Tasks</a></li>
+      <li><a href="earnings.html"><i class="fas fa-dollar-sign"></i>Earnings</a></li>
+      <li><a href="wallet.html"><i class="fas fa-wallet"></i>Wallet</a></li>
+      <li><a href="profile.html"><i class="fas fa-user"></i>Profile</a></li>
+      <li><a href="referrals.html"><i class="fas fa-users"></i>Referrals</a></li>
+      <li><a href="#" id="logout-link"><i class="fas fa-sign-out-alt"></i>Log Out</a></li>
+    </ul>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <header>
+      <h1>Upload a Task</h1>
+      <p>Let freelancers help you get things done</p>
+    </header>
+
+    <!-- UPLOAD FORM -->
+    <div class="upload-form">
+      <h2>Task Details</h2>
+      <form id="uploadTaskForm">
+        <!-- Title -->
+        <div class="form-group">
+          <label for="task-title">Title</label>
+          <input type="text" id="task-title" placeholder="E.g. subscribe to 'x' youtube channel" required>
+        </div>
+
+        <!-- Description & Steps -->
+        <div class="form-group">
+          <label for="task-description">Description (include steps)</label>
+          <textarea id="task-description" rows="4" placeholder="Describe the task and steps in detail..." required></textarea>
+        </div>
+
+        <!-- Optional External Link -->
+        <div class="form-group">
+          <label for="task-link">Link to Task (optional)</label>
+          <input type="url" id="task-link" placeholder="e.g. Google Form link">
+        </div>
+
+        <!-- Category -->
+        <div class="form-group">
+          <label for="task-category">Category</label>
+          <select id="task-category" required>
+            <option value="">Select Category</option>
+            <!-- Categories can also be fetched dynamically if needed -->
+            <option value="app tasks">App Tasks</option>
+            <option value="app / website testing">App / Website Testing</option>
+            <option value="canva">Canva</option>
+            <option value="discord">Discord</option>
+            <option value="facebook">Facebook</option>
+            <option value="instagram">Instagram</option>
+            <option value="linkedin">LinkedIn</option>
+            <option value="reddit">Reddit</option>
+            <option value="spotify">Spotify</option>
+            <option value="survey">Survey</option>
+            <option value="telegram">Telegram</option>
+            <option value="threads">Threads</option>
+            <option value="tiktok">TikTok</option>
+            <option value="twitter / x">Twitter / X</option>
+            <option value="whatsapp">WhatsApp</option>
+            <option value="web tasks">Web Tasks</option>
+            <option value="youtube">YouTube</option>
+          </select>
+        </div>
+
+        <!-- Subcategory populated from DB -->
+        <div class="form-group">
+          <label for="task-subcategory">Subcategory</label>
+          <select id="task-subcategory" required>
+            <option value="">Select Subcategory</option>
+          </select>
+        </div>
+
+        <!-- Freelancer Count -->
+        <div class="form-group">
+          <label for="freelancer-count">No. of Freelancers Needed</label>
+          <input type="number" id="freelancer-count" placeholder="E.g. 3" min="1" required>
+        </div>
+
+        <!-- Pricing & Budget (auto-calculated) -->
+        <div class="form-group">
+          <label for="unit-price">Price per Freelancer (₦)</label>
+          <input type="number" id="unit-price" readonly>
+        </div>
+        <div class="form-group">
+          <label for="task-budget">Total Budget (₦)</label>
+          <input type="number" id="task-budget" readonly>
+        </div>
+
+        <!-- Sample Screenshot for Freelancers -->
+        <div class="form-group">
+          <label for="sample-image">Sample Screenshot (optional)</label>
+          <input type="file" id="sample-image" accept="image/jpeg, image/png, image/jpg">
+        </div>
+
+        <!-- Submit -->
+        <button type="submit">Post Task</button>
+      </form>
+    </div>
+  </main>
+
+  <!-- Supabase client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // Initialize Supabase
+    const SUPABASE_URL = "https://fwwbsoesxijhhpzpdjou.supabase.co";
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3d2Jzb2VzeGlqaGhwenBkam91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1NzA0MzEsImV4cCI6MjA2ODE0NjQzMX0.qELrGVrVdug3q53cxNGStsFEfLcb7N-lVS9u3qu6HEE';
+  const { createClient } = window.supabase;
+  const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // Elements
+    const uploadForm   = document.getElementById('uploadTaskForm');
+    const catSelect    = document.getElementById('task-category');
+    const subSelect    = document.getElementById('task-subcategory');
+    const countInput   = document.getElementById('freelancer-count');
+    const unitInput    = document.getElementById('unit-price');
+    const budgetInput  = document.getElementById('task-budget');
+    const sampleInput  = document.getElementById('sample-image');
+
+    // Helper: recalc budget
+    function updateBudget() {
+      const price = parseFloat(unitInput.value) || 0;
+      const num   = parseInt(countInput.value)  || 0;
+      const base  = price * num;
+      const comm  = Math.round(0.2 * base);
+      budgetInput.value = base + comm;
+    }
+
+    // On category change: fetch subcategories from DB
+    catSelect.addEventListener('change', async () => {
+      subSelect.innerHTML = '<option value="">Select Subcategory</option>';
+      const { data: subs, error } = await supabase
+        .from('subcategories')
+        .select('id, label, unit_price')
+        .eq('category', catSelect.value);
+      if (error) return alert('Could not load subcategories');
+      subs.forEach(({ id, label, unit_price }) => {
+        const opt = document.createElement('option');
+        opt.value = id;
+        opt.textContent = `${label} (₦${unit_price})`;
+        opt.dataset.price = unit_price;
+        subSelect.append(opt);
+      });
+      unitInput.value  = '';
+      budgetInput.value = '';
+    });
+
+    // On subcategory change: set price & recalc
+    subSelect.addEventListener('change', () => {
+      const selected = subSelect.selectedOptions[0];
+      unitInput.value = selected?.dataset.price || '';
+      updateBudget();
+    });
+    countInput.addEventListener('input', updateBudget);
+
+    // Handle form submission
+    uploadForm.addEventListener('submit', async e => {
+      e.preventDefault();
+      const title       = document.getElementById('task-title').value.trim();
+      const description = document.getElementById('task-description').value.trim();
+      const taskUrl     = document.getElementById('task-link').value.trim();
+      const category    = catSelect.value;
+      const subcategory_id = parseInt(subSelect.value);
+      const unit_price  = parseFloat(unitInput.value);
+      const max_earners = parseInt(countInput.value);
+
+      // Pricing
+      const baseTotal = unit_price * max_earners;
+      const commission = Math.round(0.2 * baseTotal);
+      const totalPrice = baseTotal + commission;
+      const taskType  = unit_price > 50 ? 'premium' : 'free';
+
+      // Auth & profile check
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return alert('Login required');
+      const { data: profile, error: profErr } = await supabase
+        .from('profiles')
+        .select('wallet_balance, is_verified')
+        .eq('id', user.id)
+        .single();
+      if (profErr || !profile) return alert('Profile fetch failed');
+      if (!profile.is_verified) return alert('Only verified users can post tasks');
+      if (totalPrice > profile.wallet_balance) return alert('Insufficient balance');
+
+      // Upload sample image (if any)
+      let sampleUrl = null;
+      if (sampleInput.files.length) {
+        const file = sampleInput.files[0];
+        const { data: storageData, error: storageErr } = await supabase.storage
+          .from('task-evidence')
+          .upload(`${user.id}/${Date.now()}_${file.name}`, file);
+        if (storageErr) return alert('Sample upload failed');
+        sampleUrl = supabase.storage.from('task-evidence').getPublicUrl(storageData.path).publicUrl;
+      }
+
+      // Debit wallet
+      const { error: walletErr } = await supabase.rpc('debit_wallet', {
+        user_id: user.id,
+        amount: totalPrice,
+        reference: 'task_creation'
+      });
+      if (walletErr) return alert('Wallet debit failed');
+
+      // Insert task record
+      const { error: insertErr } = await supabase
+        .from('tasks')
+        .insert([{ title, description, task_url: taskUrl,
+                   category, subcategory_id,
+                   unit_price, commission, total_price: totalPrice,
+                   sample_image_url: sampleUrl,
+                   task_type, max_earners,
+                   client_id: user.id }]);
+      if (insertErr) return alert('Task creation failed');
+
+      alert('Task uploaded successfully!');
+      uploadForm.reset();
+    });
+  </script>
+</body>
+</html>
+  <script>
+    // Logout functionality
+    document.getElementById('logout-link').addEventListener('click', async (e) => {
+      e.preventDefault();
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        alert('Logout failed: ' + error.message);
+      } else {
+        window.location.href = 'login.html';
+      }
+    });
+  </script>

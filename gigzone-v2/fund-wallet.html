@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Fund Wallet - GigZone (Fixed)</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="fund-wallet.css" />
+  <style>
+    /* small helper for the active amount button (keeps your design but gives visible feedback) */
+    .amount-btn.active { border-color: #667eea !important; color: #667eea !important; }
+  </style>
+</head>
+<body>
+
+  <div class="main-content">
+    <section class="fund-section">
+      <h2>Fund Wallet</h2>
+      
+      <div class="balance-card">
+        <p>Wallet Balance</p>
+        <p class="balance-amount">₦12,500</p>
+      </div>
+
+      <div class="payment-method">
+        <h3>Choose Funding Method</h3>
+        <div class="method-grid">
+          <div class="payment-method" data-method="paystack" onclick="selectMethod(this, 'paystack')">
+            <span class="icon">⚡</span>
+            <div class="name">Paystack</div>
+          </div>
+          <div class="payment-method" data-method="withdrawable" onclick="selectMethod(this, 'withdrawable')">
+            <span class="icon">💰</span>
+            <div class="name">Withdrawable Balance</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="methodContainer">
+        <!-- Paystack Layout (Default) -->
+        <div id="paystackLayout">
+          <div class="form-group">
+            <label for="amount">Deposit Amount</label>
+            <input type="number" id="amount" placeholder="Enter amount (₦)" min="100" />
+            <div class="amount-buttons">
+              <button class="amount-btn" onclick="setAmount(1000, this)">₦1,000</button>
+              <button class="amount-btn" onclick="setAmount(5000, this)">₦5,000</button>
+              <button class="amount-btn" onclick="setAmount(10000, this)">₦10,000</button>
+              <button class="amount-btn" onclick="setAmount(20000, this)">₦20,000</button>
+              <button class="amount-btn" onclick="setAmount(50000, this)">₦50,000</button>
+              <button class="amount-btn" onclick="setAmount(100000, this)">₦100,000</button>
+            </div>
+          </div>
+
+          <div class="fee-info">
+            <p><strong>Transaction Info:</strong> No charges for funding your wallet. Minimum deposit is ₦100.</p>
+          </div>
+
+          <button class="fund-btn" onclick="handleDeposit()" id="fundBtn">
+            Fund Wallet
+          </button>
+        </div>
+
+        <!-- Withdrawable Balance Layout -->
+        <div id="withdrawableLayout" style="display: none;">
+          <div class="transfer-container">
+            <div class="balance-boxes">
+              <div class="balance-box withdrawable-box">
+                <h4>Withdrawable Balance</h4>
+                <!-- fixed id spelling -->
+                <div class="balance-amount-small" id="withdrawableAmount">₦25,000</div>
+              </div>
+              
+              <div class="transfer-arrow">
+                <span>→</span>
+              </div>
+              
+              <div class="balance-box wallet-box">
+                <h4>Wallet</h4>
+                <div class="balance-amount-small" id="walletAmount">₦12,500</div>
+              </div>
+            </div>
+            
+            <div class="form-group" style="margin-top: 30px;">
+              <label for="transferAmount">Enter amount to transfer</label>
+              <input type="number" id="transferAmount" placeholder="Enter amount (₦)" min="100" />
+            </div>
+            
+            <div class="fee-info">
+              <p><strong>Transfer Info:</strong> Instantly transfer funds from your withdrawable balance to your wallet. No charges apply.</p>
+            </div>
+            
+            <button class="fund-btn" onclick="handleTransfer()" id="transferBtn">
+              Transfer from Balance
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <hr class="divider" />
+
+      <div class="recent-deposits">
+        <h3>Recent Deposits</h3>
+        <ul class="deposit-list">
+          <li class="deposit-item">
+            <div>
+              <div class="deposit-amount">+₦10,000</div>
+              <div class="deposit-method">Via Paystack</div>
+              <div class="deposit-date">June 12, 2025</div>
+            </div>
+            <span class="status successful">Successful</span>
+          </li>
+          <li class="deposit-item">
+            <div>
+              <div class="deposit-amount">+₦5,000</div>
+              <div class="deposit-method">From Withdrawable Balance</div>
+              <div class="deposit-date">June 10, 2025</div>
+            </div>
+            <span class="status successful">Successful</span>
+          </li>
+          <li class="deposit-item">
+            <div>
+              <div class="deposit-amount">+₦2,500</div>
+              <div class="deposit-method">Via Paystack</div>
+              <div class="deposit-date">June 8, 2025</div>
+            </div>
+            <span class="status pending">Pending</span>
+          </li>
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    /*
+      Minimal, defensive globals so the UI functions can run before Supabase loads.
+      These will be overwritten by the real values once fetchWalletBalances() runs.
+    */
+    let selectedMethod = 'paystack';
+    let walletBalance = 12500;
+    let withdrawableBalance = 25000;
+    let currentUserId = null;
+
+    function selectMethod(element, method) {
+      // Remove selected class from all method items (scoped selector avoids wrapper collision)
+      document.querySelectorAll('.method-grid .payment-method').forEach(el => {
+        el.classList.remove('selected');
+      });
+
+      // Add selected class to clicked method
+      element.classList.add('selected');
+      selectedMethod = method;
+
+      // Switch UI based on selected method
+      switchLayout(method);
+    }
+
+    function switchLayout(method) {
+      const paystackLayout = document.getElementById('paystackLayout');
+      const withdrawableLayout = document.getElementById('withdrawableLayout');
+
+      if (method === 'withdrawable') {
+        paystackLayout.style.display = 'none';
+        withdrawableLayout.style.display = 'block';
+
+        // Update the displayed balances (guard in case values are not yet numbers)
+        document.getElementById('withdrawableAmount').textContent = `₦${(withdrawableBalance || 0).toLocaleString()}`;
+        document.getElementById('walletAmount').textContent = `₦${(walletBalance || 0).toLocaleString()}`;
+      } else {
+        paystackLayout.style.display = 'block';
+        withdrawableLayout.style.display = 'none';
+      }
+    }
+
+    function setAmount(amount, btnEl) {
+      document.getElementById('amount').value = amount;
+
+      // Add visual feedback by toggling an "active" class
+      document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('active'));
+      if (btnEl) btnEl.classList.add('active');
+    }
+
+    // ------------------- handleDeposit (kept logic, fixed bugs & safe destructuring) -------------------
+    async function handleDeposit() {
+      const amount = parseFloat(document.getElementById('amount').value);
+
+      if (!selectedMethod) {
+        alert('Please select a payment method');
+        return;
+      }
+
+      if (!amount || amount < 100) {
+        alert('Please enter a valid amount (minimum ₦100)');
+        return;
+      }
+
+      const btn = document.getElementById('fundBtn');
+      btn.innerHTML = 'Processing Payment...';
+      btn.disabled = true;
+
+      if (selectedMethod === 'paystack') {
+        // Load Paystack script dynamically if not already loaded
+        if (!window.PaystackPop) {
+          try {
+            await new Promise((resolve, reject) => {
+              const script = document.createElement('script');
+              script.src = 'https://js.paystack.co/v1/inline.js';
+              script.onload = resolve;
+              script.onerror = () => reject(new Error('Failed to load Paystack SDK'));
+              document.body.appendChild(script);
+            });
+          } catch (err) {
+            alert('Failed to load Paystack. Please try again later.');
+            btn.innerHTML = 'Fund Wallet';
+            btn.disabled = false;
+            return;
+          }
+        }
+
+        // Get logged-in user's email (safe destructuring)
+        const { data, error: userError } = await supabase.auth.getUser();
+        const user = data?.user;
+        if (userError || !user) {
+          alert('User not logged in. Please log in again.');
+          btn.innerHTML = 'Fund Wallet';
+          btn.disabled = false;
+          return;
+        }
+
+        const handler = window.PaystackPop.setup({
+          key: 'pk_test_e990765c595bfc4a9f1174305fd45db4dfeacceb', // your public key
+          email: user.email,
+          amount: Math.round(amount * 100), // Convert to kobo
+          currency: 'NGN',
+          onClose: function() {
+            alert('Payment cancelled.');
+            btn.innerHTML = 'Fund Wallet';
+            btn.disabled = false;
+          },
+          callback: function(response) {
+            // Call async IIFE so we can use await/try/catch
+            (async () => {
+              try {
+                const res = await fetch('/api/verify-deposit', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    paystack_reference: response.reference,
+                    amount,
+                    user_id: user.id
+                  })
+                });
+
+                let data;
+                try { data = await res.json(); } catch (e) { throw new Error('Invalid server response'); }
+
+                if (!res.ok || !data.success) throw new Error(data.message || 'Verification failed');
+
+                // Update UI with returned balance
+                walletBalance = parseFloat(data.newBalance ?? walletBalance);
+                document.querySelector('.balance-amount').textContent = `₦${walletBalance.toLocaleString()}`;
+                document.getElementById('walletAmount').textContent = `₦${walletBalance.toLocaleString()}`;
+                addRecentDeposit(amount, 'Via Paystack');
+
+                alert(`Deposit successful! ₦${amount.toLocaleString()} added to your wallet.`);
+              } catch (err) {
+                console.error('Verification error:', err);
+                alert(`Payment succeeded but verification failed: ${err.message || err}`);
+              } finally {
+                btn.innerHTML = 'Fund Wallet';
+                btn.disabled = false;
+              }
+            })();
+          }
+        });
+
+        handler.openIframe();
+      } else {
+        // For withdrawable balance method (unchanged)
+        // We call the Supabase-backed handleTransfer implementation (which updates DB)
+        await handleTransfer();
+        btn.innerHTML = 'Fund Wallet';
+        btn.disabled = false;
+      }
+    }
+    // ---------------------------------------------------------------------------------------
+
+    // small showPaymentGateway helper (kept for dev/testing)
+    function showPaymentGateway(amount) {
+      alert(`Redirecting to Paystack gateway...\n\nAmount: ₦${amount}\n\nThis would normally redirect to Paystack for payment processing.`);
+    }
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+  // 1) Initialize Supabase via the global
+  const SUPABASE_URL = 'https://fwwbsoesxijhhpzpdjou.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3d2Jzb2VzeGlqaGhwenBkam91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1NzA0MzEsImV4cCI6MjA2ODE0NjQzMX0.qELrGVrVdug3q53cxNGStsFEfLcb7N-lVS9u3qu6HEE';
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // Runs on page load
+  window.addEventListener('DOMContentLoaded', async () => {
+    await fetchCurrentUser();
+    if (currentUserId) {
+      await fetchWalletBalances();
+      await fetchRecentDeposits();
+    }
+    // Highlight the default selected method on page load
+    document.querySelector(`[data-method="${selectedMethod}"]`)?.classList.add('selected');
+  });
+
+  // 🔐 Get the logged-in user
+  async function fetchCurrentUser() {
+    const { data, error } = await supabase.auth.getUser();
+    if (error || !data?.user) {
+      // If not logged in, redirect to login (keeping your behaviour)
+      // Note: some flows prefer to show a UI message instead of immediate redirect.
+      alert("Not logged in. Please log in first.");
+      window.location.href = "login.html";
+      return;
+    }
+    currentUserId = data.user.id;
+  }
+
+  // 💰 Fetch wallet and withdrawable balances from Supabase
+  async function fetchWalletBalances() {
+    const { data, error } = await supabase
+      .from('wallets')
+      .select('balance, withdrawable_balance')
+      .eq('user_id', currentUserId)
+      .single();
+
+    if (error || !data) {
+      console.error("Error fetching wallet data:", error);
+      // keep UI defaults but inform user
+      // alert("Could not fetch wallet info.");
+      return;
+    }
+
+    walletBalance = parseFloat(data.balance || 0);
+    withdrawableBalance = parseFloat(data.withdrawable_balance || 0);
+
+    // Update UI
+    document.querySelector('.balance-amount').textContent = `₦${walletBalance.toLocaleString()}`;
+    document.getElementById('withdrawableAmount').textContent = `₦${withdrawableBalance.toLocaleString()}`;
+    document.getElementById('walletAmount').textContent = `₦${walletBalance.toLocaleString()}`;
+  }
+
+  // 🔄 Handle transfer from withdrawable balance to wallet (Supabase-backed)
+  async function handleTransfer() {
+    const amount = parseFloat(document.getElementById('transferAmount').value);
+
+    if (!amount || amount < 100) {
+      alert("Please enter a valid amount (minimum ₦100)");
+      return;
+    }
+
+    if (amount > withdrawableBalance) {
+      alert(`Insufficient withdrawable balance!\n\nRequested: ₦${amount.toLocaleString()}\nAvailable: ₦${withdrawableBalance.toLocaleString()}`);
+      return;
+    }
+
+    const btn = document.getElementById('transferBtn');
+    btn.textContent = 'Processing Transfer...';
+    btn.disabled = true;
+
+    // Update wallet in Supabase (atomically update balances)
+    const { error: updateError } = await supabase
+      .from('wallets')
+      .update({
+        balance: walletBalance + amount,
+        withdrawable_balance: withdrawableBalance - amount
+      })
+      .eq('user_id', currentUserId);
+
+    if (updateError) {
+      console.error("Failed to update balances:", updateError);
+      alert("Failed to process transfer.");
+      btn.textContent = 'Transfer from Balance';
+      btn.disabled = false;
+      return;
+    }
+
+    // Log the deposit in the transactions table
+    const { error: insertError } = await supabase
+      .from('transactions')
+      .insert([
+        {
+          user_id: currentUserId,
+          amount: amount,
+          type: 'deposit',
+          status: 'successful',
+          description: 'From Withdrawable Balance'
+        }
+      ]);
+
+    if (insertError) {
+      console.error("Failed to insert transaction:", insertError);
+      alert("Transfer completed, but failed to log transaction.");
+    }
+
+    // Update local variables
+    walletBalance += amount;
+    withdrawableBalance -= amount;
+
+    // Update UI
+    document.getElementById('withdrawableAmount').textContent = `₦${withdrawableBalance.toLocaleString()}`;
+    document.getElementById('walletAmount').textContent = `₦${walletBalance.toLocaleString()}`;
+    document.querySelector('.balance-amount').textContent = `₦${walletBalance.toLocaleString()}`;
+
+    // Reset form
+    document.getElementById('transferAmount').value = '';
+
+    // Update recent deposits list
+    addRecentDeposit(amount, 'From Withdrawable Balance');
+
+    alert(`Transfer Successful ✅\n\n₦${amount.toLocaleString()} has been added to your wallet.`);
+
+    btn.textContent = 'Transfer from Balance';
+    btn.disabled = false;
+  }
+
+  // 📄 Fetch and render recent deposit history
+  async function fetchRecentDeposits() {
+    const { data, error } = await supabase
+      .from('transactions')
+      .select('*')
+      .eq('user_id', currentUserId)
+      .eq('type', 'deposit')
+      .order('created_at', { ascending: false })
+      .limit(10);
+
+    const depositList = document.querySelector('.deposit-list');
+    depositList.innerHTML = ''; // Clear static/fake entries
+
+    if (error || !data || data.length === 0) {
+      depositList.innerHTML = `<li class="deposit-item">No deposit transactions yet.</li>`;
+      return;
+    }
+
+    data.forEach(tx => {
+      const li = document.createElement('li');
+      li.className = 'deposit-item';
+      li.innerHTML = `
+        <div>
+          <div class="deposit-amount">+₦${parseFloat(tx.amount).toLocaleString()}</div>
+          <div class="deposit-method">${tx.description || 'Via Paystack'}</div>
+          <div class="deposit-date">${new Date(tx.created_at).toLocaleDateString('en-GB', {
+            day: 'numeric', month: 'long', year: 'numeric'
+          })}</div>
+        </div>
+        <span class="status ${tx.status === 'successful' ? 'successful' : 'pending'}">${tx.status}</span>
+      `;
+      depositList.appendChild(li);
+    });
+  }
+
+  // ➕ Add new deposit to UI manually (used after transfer / deposit)
+  function addRecentDeposit(amount, method) {
+    const depositList = document.querySelector('.deposit-list');
+
+    const newDeposit = document.createElement('li');
+    newDeposit.className = 'deposit-item';
+    newDeposit.innerHTML = `
+      <div>
+        <div class="deposit-amount">+₦${amount.toLocaleString()}</div>
+        <div class="deposit-method">${method}</div>
+        <div class="deposit-date">${new Date().toLocaleDateString('en-GB', {
+          day: 'numeric', month: 'long', year: 'numeric'
+        })}</div>
+      </div>
+      <span class="status successful">Successful</span>
+    `;
+
+    depositList.insertBefore(newDeposit, depositList.firstChild);
+  }
+
+  // Auto-update fee info based on amount (keeping it simple now)
+  document.getElementById('amount').addEventListener('input', function(e) {
+    const amount = parseInt(e.target.value) || 0;
+    const feeInfo = document.querySelector('#paystackLayout .fee-info p');
+
+    if (amount >= 100) {
+      feeInfo.innerHTML = '<strong>Transaction Info:</strong> No charges for funding your wallet. ✅';
+      document.querySelector('#paystackLayout .fee-info').style.backgroundColor = '#d1fae5';
+      document.querySelector('#paystackLayout .fee-info').style.borderColor = '#10b981';
+      feeInfo.style.color = '#065f46';
+    } else {
+      feeInfo.innerHTML = '<strong>Transaction Info:</strong> No charges for funding your wallet. Minimum deposit is ₦100.';
+      document.querySelector('#paystackLayout .fee-info').style.backgroundColor = '#e0f2fe';
+      document.querySelector('#paystackLayout .fee-info').style.borderColor = '#0284c7';
+      feeInfo.style.color = '#0369a1';
+    }
+  });
+</script>
+</body>
+</html>
