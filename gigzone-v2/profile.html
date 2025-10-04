@@ -88,30 +88,41 @@
 <script>
   const { createClient } = supabase;
   const supabaseClient = createClient(
-    'https://fwwbsoesxijhhpzpdjou.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3d2Jzb2VzeGlqaGhwenBkam91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1NzA0MzEsImV4cCI6MjA2ODE0NjQzMX0.qELrGVrVdug3q53cxNGStsFEfLcb7N-lVS9u3qu6HEE'
+    "https://dhbmtcnuxishkaycskea.supabase.co",
+   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoYm10Y251eGlzaGtheWNza2VhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4NDA3MDAsImV4cCI6MjA3NDQxNjcwMH0.L_BwZNz4BW8GqSyOuJzaKkUkZoRq-7Uz3y5SUha05bM"
   );
   const bankMap = {
   "044": "Access Bank",
+  "063": "Access Bank (Diamond)",
+  "023": "Citibank",
   "050": "Ecobank Nigeria",
-  "070": "Fidelity Bank",
   "011": "First Bank of Nigeria",
   "214": "First City Monument Bank (FCMB)",
   "058": "Guaranty Trust Bank (GTBank)",
   "030": "Heritage Bank",
   "301": "Jaiz Bank",
   "082": "Keystone Bank",
+  "090267": "Kuda Microfinance Bank",
+  "090405": "Moniepoint MFB",
+  "100033": "PalmPay",
+  "076": "Polaris Bank",
+  "101": "Providus Bank",
+  "125": "Rubies MFB",
+  "51310": "Sparkle Microfinance Bank",
   "221": "Stanbic IBTC Bank",
   "068": "Standard Chartered Bank",
   "232": "Sterling Bank",
+  "100": "Suntrust Bank",
+  "302": "TAJ Bank",
   "032": "Union Bank of Nigeria",
   "033": "United Bank for Africa (UBA)",
   "215": "Unity Bank",
   "035": "Wema Bank",
   "057": "Zenith Bank",
-  "076": "Polaris Bank",
-  "100": "SunTrust Bank"
-};
+  "100004": "Opay",
+  "090110": "VFD MFB",
+  "000030": "Parallex Bank"
+}
   // On page load, check auth state and fetch profile
   document.addEventListener('DOMContentLoaded', async () => {
     const { data: { session } } = await supabaseClient.auth.getSession();
@@ -146,9 +157,17 @@
     const bankInput = document.getElementById('bank-name');
     const accountInput = document.getElementById('account-number');
 
-    if (wallet && wallet.bank_name && wallet.account_number) {
-  const bankCode = wallet.bank_name; // stored as code in DB
-  bankInput.value = bankMap[bankCode] || bankCode; // show real name or fallback
+   if (wallet && wallet.bank_name && wallet.account_number) {
+  const bankCode = wallet.bank_name.trim(); // Remove any whitespace
+  const bankName = bankMap[bankCode];
+  
+  if (bankName) {
+    bankInput.value = bankName; // Show the full bank name
+  } else {
+    bankInput.value = bankCode; // Fallback to showing the code if not found
+    console.log('Bank code not found in map:', bankCode); // Debug log
+  }
+  
   accountInput.value = wallet.account_number;
 
     } else {

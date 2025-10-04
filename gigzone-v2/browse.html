@@ -73,22 +73,22 @@
     <div id="paginationControls" class="pagination"></div>
   </main>
 
-  <!-- Verify Popup -->
-  <div id="verifyPopup" class="popup-overlay" hidden>
-    <div class="popup-content">
-      <h3>Verify Your Account</h3>
-      <p>You need a verified account (₦1200) to perform premium tasks or upload.</p>
-      <button id="cancelPopup" class="btn">Cancel</button>
-      <button id="goVerify" class="btn btn-primary">Verify Now</button>
-    </div>
+    <!-- Verify Popup -->
+<div id="verifyPopup" class="popup-overlay" hidden>
+  <div class="popup-content">
+    <h3>Verify Your Account</h3>
+    <p>You need a verified account (₦1200) to perform premium tasks or upload.</p>
+    <button id="cancelPopup" class="btn" type="button">Cancel</button>
+    <button id="goVerify" class="btn btn-primary">Verify Now</button>
   </div>
+</div>
 
   <!-- Include Supabase client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     // Initialize Supabase
-    const SUPABASE_URL = "https://fwwbsoesxijhhpzpdjou.supabase.co";
-  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3d2Jzb2VzeGlqaGhwenBkam91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1NzA0MzEsImV4cCI6MjA2ODE0NjQzMX0.qELrGVrVdug3q53cxNGStsFEfLcb7N-lVS9u3qu6HEE';
+  const SUPABASE_URL = "https://dhbmtcnuxishkaycskea.supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoYm10Y251eGlzaGtheWNza2VhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4NDA3MDAsImV4cCI6MjA3NDQxNjcwMH0.L_BwZNz4BW8GqSyOuJzaKkUkZoRq-7Uz3y5SUha05bM";
   const { createClient } = window.supabase;
   const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
     // State
@@ -108,6 +108,7 @@
       initFilterInputs();
       initPopupHandlers();
       initMobileSidebarToggle();
+      await populateCategories();
       fetchTasks();
     });
 
@@ -139,15 +140,15 @@
         .select('*', { count: 'exact' });
 
       if (filters.search) query = query.ilike('title', `%${filters.search}%`);
-      if (filters.category) query = query.eq('category', filters.category);
+      if (filters.category) query = query.eq('category_name', filters.category);
       if (filters.type) query = query.eq('is_premium', filters.type === 'premium');
 
       // Sorting map
       const orderMap = {
         newest: { col: 'created_at', asc: false },
         oldest: { col: 'created_at', asc: true },
-        price_high: { col: 'unit_price', asc: false },
-        price_low: { col: 'unit_price', asc: true }
+        price_high: { col: 'subcategory_price', asc: false },
+        price_low: { col: 'subcategory_price', asc: true }
       };
       const sortOpt = orderMap[filters.sort] || { col: 'created_at', asc: false };
       query = query.order(sortOpt.col, { ascending: sortOpt.asc });
@@ -159,6 +160,9 @@
 
       const { data, count, error } = await query;
       if (error) return console.error('Fetch error:', error);
+
+      // 🔥 Store tasks globally for ApplyNow button
+  window.currentTasks = data;
 
       renderTasks(data);
       renderPagination(count);
@@ -173,15 +177,15 @@
         card.className = 'glass-card task-card';
         const progressPct = Math.min((task.completed_count / task.max_earners) * 100, 100);
         card.innerHTML = `
-          <h3>${task.title}</h3>
-          <p>₦${task.unit_price} <span class="small">(${task.subcategory_label})</span></p>
-          ${task.is_premium ? '<span class="badge premium">Premium</span>' : ''}
-          ${task.is_new ? '<span class="badge new">New</span>' : ''}
-          <div class="progress-bar"><div class="progress" style="width:${progressPct}%"></div></div>
-          <button class="btn btn-primary" onclick="handleApplyNow('${task.id}')">
-            <i class="fas fa-paper-plane" style="margin-right:8px;"></i>Apply Now
-          </button>
-        `;
+        <h3>${task.title}</h3>
+        <p><strong>₦${task.subcategory_price}</strong> <span class="small">(${task.subcategory_label})</span></p>
+        ${task.is_premium ? '<strong><span class="badge premium">Premium</span></strong>' : ''}
+        ${task.is_new ? '<span class="badge new">New</span>' : ''}
+        <div class="progress-bar"><div class="progress" style="width:${progressPct}%"></div></div>
+        <button class="btn btn-primary" onclick="handleApplyNow('${task.id}')">
+       <i class="fas fa-paper-plane" style="margin-right:8px;"></i>Apply Now
+     </button>
+  `;
         container.appendChild(card);
       });
     }
@@ -205,19 +209,43 @@
       next.addEventListener('click', () => { currentPage++; fetchTasks(); }); pag.appendChild(next);
     }
 
-    // Handle Apply Now navigation
     function handleApplyNow(id) {
-      if (!userIsVerified) showVerifyPopup();
-      else window.location.href = `task-details.html?id=${id}`;
-    }
+  // Find the task in the current tasks list
+  const task = window.currentTasks?.find(t => t.id === id);
 
-    // Popup handlers
-    function initPopupHandlers() {
-      document.getElementById('cancelPopup').addEventListener('click', () => document.getElementById('verifyPopup').hidden = true);
-      document.getElementById('goVerify').addEventListener('click', () => window.location.href = 'verify.html');
-    }
+  if (!task) return alert("Task not found, please refresh.");
 
-    function showVerifyPopup() { document.getElementById('verifyPopup').hidden = false; }
+  if (!userIsVerified && task.is_premium) {
+    // Non-verified trying premium task → block
+    showVerifyPopup();
+  } else {
+    // Otherwise allow
+    window.location.href = `task-details.html?id=${id}`;
+  }
+}
+
+ // ===== Popup Handlers =====
+function showVerifyPopup() { 
+  document.getElementById('verifyPopup').classList.add('active');
+}
+
+function hideVerifyPopup() { 
+  document.getElementById('verifyPopup').classList.remove('active');
+}
+
+function initPopupHandlers() {
+  const popup = document.getElementById('verifyPopup');
+  const cancelBtn = document.getElementById('cancelPopup');
+  const goVerifyBtn = document.getElementById('goVerify');
+
+  if (cancelBtn) cancelBtn.addEventListener('click', hideVerifyPopup);
+  if (goVerifyBtn) goVerifyBtn.addEventListener('click', () => window.location.href = 'verify.html');
+
+  // Click outside content to close
+  popup.addEventListener('click', (e) => {
+    if (e.target === popup) hideVerifyPopup();
+  });
+}
 
     // Sidebar toggle
     function initMobileSidebarToggle() {
@@ -239,4 +267,24 @@
         window.location.href = 'login.html';
       }
     });
+
+// Populate category dropdown dynamically
+async function populateCategories() {
+  const { data: categories, error } = await supabase
+    .from('categories')
+    .select('name');
+
+  if (error) return console.error('Error fetching categories:', error);
+
+  const select = document.getElementById('categoryFilter');
+  select.innerHTML = '<option value="">All Categories</option>';
+
+  categories.forEach(cat => {
+    if (!cat.name) return;
+    const option = document.createElement('option');
+    option.value = cat.name;       // ✅ filter by name
+    option.textContent = cat.name; // ✅ show readable label
+    select.appendChild(option);
+  });
+}
   </script>

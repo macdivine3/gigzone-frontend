@@ -1,122 +1,168 @@
-// Supabase setup
-const SUPABASE_URL = 'https://fwwbsoesxijhhpzpdjou.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3d2Jzb2VzeGlqaGhwenBkam91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1NzA0MzEsImV4cCI6MjA2ODE0NjQzMX0.qELrGVrVdug3q53cxNGStsFEfLcb7N-lVS9u3qu6HEE';
-const { createClient } = window.supabase;
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// signup.js
+    // Supabase Configuration
+    const SUPABASE_URL = "https://dhbmtcnuxishkaycskea.supabase.co";
+   const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoYm10Y251eGlzaGtheWNza2VhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4NDA3MDAsImV4cCI6MjA3NDQxNjcwMH0.L_BwZNz4BW8GqSyOuJzaKkUkZoRq-7Uz3y5SUha05bM";
+   
+   const { createClient } = window.supabase;
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// Generate unique referral code
-function generateReferralCode(username) {
-  const randomDigits = Math.floor(100 + Math.random() * 900); // 3-digit number
-  return `${username}${randomDigits}`;
-}
+    const signupForm = document.getElementById('signupForm');
+    const signupBtn = document.getElementById('signupBtn');
+    const messageDiv = document.getElementById('message');
 
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('signupForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const full_name = document.getElementById('full_name').value.trim();
-    const username = document.getElementById('username').value.trim();
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
-    const referralCode = document.getElementById('referral-code').value.trim();
-
-    if (password !== confirmPassword) {
-      alert('Passwords do not match!');
-      return;
+    // Generate referral code function
+    function generateReferralCode(username) {
+        const randomNum = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+        return `${username.toLowerCase().slice(0, 4)}${randomNum}`;
     }
+
+    // Show message function
+    function showMessage(text, type = 'success') {
+        messageDiv.textContent = text;
+        messageDiv.className = `message ${type}`;
+        messageDiv.classList.remove('hidden');
+        setTimeout(() => messageDiv.classList.add('hidden'), 8000);
+    }
+
+    // Auto-fill referral code from URL
+    window.addEventListener("DOMContentLoaded", () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const ref = urlParams.get("ref");
+        if (ref) {
+            document.getElementById("referral-code").value = ref;
+        }
+    });
+
+    // Validate passwords match
+    function validatePasswords(password, confirmPassword) {
+        if (password !== confirmPassword) {
+            showMessage('Passwords do not match', 'error');
+            return false;
+        }
+        return true;
+    }
+
+    // Validate referral code exists
+async function validateReferralCode(referralCode) {
+    if (!referralCode) return null; // Optional field
 
     try {
-      // Step 1: Sign up the user
-      const { data: signupData, error: signupError } = await supabase.auth.signUp({
-        email,
-        password
-      });
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('id, referral_code')
+            .eq('referral_code', referralCode)
+            .single();
 
-      if (signupError) {
-        alert('Error signing up: ' + signupError.message);
-        return;
-      }
-
-      const user = signupData.user;
-      const userId = user.id;
-      const myReferralCode = generateReferralCode(username);
-
-      let validReferralCode = null;
-
-      // Step 2: Validate referral code if provided
-      if (referralCode) {
-        const { data: referrerData, error: referrerError } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('referral_code', referralCode)
-          .single();
-
-        if (!referrerError && referrerData) {
-          validReferralCode = referralCode;
-        } else {
-          alert('Invalid referral code! Proceeding without referral bonus.');
+        if (error || !data) {
+            showMessage('Invalid referral code, proceeding without it', 'info');
+            return null; // Use null instead of false
         }
-      }
-
-      // Step 3: Create profile
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert([{
-          id: userId,
-          full_name,
-          username,
-          email,
-          referral_code: myReferralCode,
-          referred_by: validReferralCode
-        }]);
-
-      if (profileError) {
-        alert('Error saving profile: ' + profileError.message);
-        return;
-      }
-
-      // Step 4: Create wallet
-      const { error: walletError } = await supabase
-        .from('wallets')
-        .insert([{ user_id: userId }]);
-
-      if (walletError) {
-        console.error("Wallet creation failed:", walletError.message);
-        alert("Wallet setup failed.");
-        return;
-      }
-
-      // Step 5: Log referral if valid
-      if (validReferralCode) {
-        const { data: referrerProfile, error: refProfileError } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('referral_code', validReferralCode)
-          .single();
-
-        if (!refProfileError && referrerProfile) {
-          const referrerId = referrerProfile.id;
-
-          const { error: referralLogError } = await supabase
-            .from('referrals')
-            .insert([{
-              referrer_id: referrerId,
-              referred_user_id: userId,
-            }]);
-
-          if (referralLogError) {
-            console.error('Referral logging failed:', referralLogError.message);
-          }
-        }
-      }
-
-      alert('Signup successful! Please check your email to verify your account.');
-      window.location.href = 'login.html';
-
+        
+        return referralCode; // Valid referral code
     } catch (error) {
-      console.error('Unexpected error:', error.message);
-      alert('Something went wrong.');
+        console.error('Referral validation error:', error);
+        showMessage('Error validating referral code, proceeding without it', 'info');
+        return null; // Always null if lookup fails
     }
-  });
+}
+    // Main signup logic
+    signupForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const formData = new FormData(signupForm);
+        const full_name = formData.get('full_name').trim();
+        const username = formData.get('username').trim();
+        const email = formData.get('email').trim();
+        const password = formData.get('password');
+        const confirmPassword = formData.get('confirmPassword');
+        const referral_code = formData.get('referral_code').trim();
+
+        // Validate required fields
+        if (!full_name || !username || !email || !password) {
+            showMessage('Please fill in all required fields', 'error');
+            return;
+        }
+
+        // Validate passwords match
+        if (!validatePasswords(password, confirmPassword)) {
+            return;
+        }
+
+        // Validate referral code if provided
+        const validReferralCode = await validateReferralCode(referral_code);
+        if (referral_code && validReferralCode === false) {
+            return; // Invalid referral code
+        }
+
+        signupBtn.disabled = true;
+        signupBtn.textContent = 'Creating Account...';
+
+        try {
+            // Create auth user with email verification required
+            // Build metadata safely
+let userMetadata = {
+    full_name: full_name,
+    username: username
+};
+
+if (validReferralCode) {
+    // Only attach referral_code if truly valid
+    userMetadata.referral_code = validReferralCode;
+} else {
+    showMessage('Proceeding without referral code', 'info');
+}
+
+// Create auth user with email verification required
+const { data, error } = await supabase.auth.signUp({
+    email: email,
+    password: password,
+    options: {
+        emailRedirectTo: `${window.location.origin}/email-verified.html`,
+        data: userMetadata
+    }
 });
+
+            if (error) {
+                throw new Error(error.message);
+            }
+
+            if (data.user && !data.user.email_confirmed_at) {
+                // Email verification required
+                showMessage('Account created! Please check your email and click the verification link to complete your registration.', 'success');
+                signupForm.reset();
+            } else if (data.user && data.user.email_confirmed_at) {
+                // Email already verified (shouldn't happen in normal flow)
+                showMessage('Account created and verified! Redirecting to login...', 'success');
+                setTimeout(() => window.location.href = 'login.html', 2000);
+            }
+
+        } catch (error) {
+            console.error('Signup error:', error);
+            let errorMessage = 'An error occurred during signup';
+            
+            if (error.message.includes('already registered')) {
+                errorMessage = 'An account with this email already exists';
+            } else if (error.message.includes('Password should be')) {
+                errorMessage = 'Password is too weak. Please use a stronger password';
+            } else if (error.message.includes('Username')) {
+                errorMessage = 'Username is already taken';
+            } else {
+                errorMessage = error.message;
+            }
+            
+            showMessage(errorMessage, 'error');
+        } finally {
+            signupBtn.disabled = false;
+            signupBtn.textContent = 'Sign Up';
+        }
+    });
+
+        // Check if user is already logged in
+    async function checkAuthState() {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session && session.user && session.user.email_confirmed_at) {
+            window.location.href = 'dashboard.html';
+        }
+    }
+
+    checkAuthState();

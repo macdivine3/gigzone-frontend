@@ -444,8 +444,9 @@
   <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    const SUPABASE_URL = "https://fwwbsoesxijhhpzpdjou.supabase.co";
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3d2Jzb2VzeGlqaGhwenBkam91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1NzA0MzEsImV4cCI6MjA2ODE0NjQzMX0.qELrGVrVdug3q53cxNGStsFEfLcb7N-lVS9u3qu6HEE';
+    // 1) Initialize Supabase
+       const SUPABASE_URL = "https://dhbmtcnuxishkaycskea.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoYm10Y251eGlzaGtheWNza2VhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4NDA3MDAsImV4cCI6MjA3NDQxNjcwMH0.L_BwZNz4BW8GqSyOuJzaKkUkZoRq-7Uz3y5SUha05bM";
     const { createClient } = window.supabase;
     const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -507,7 +508,7 @@
         row.innerHTML = `
           <td>
             <div class="user-cell">
-              <img src="${submission.avatar_url || 'default-avatar.png'}" class="avatar" alt="Avatar" />
+              <img src="${submission.avatar_url || 'assets/images/default-avatar.png'}" class="avatar" alt="Avatar" />
               <span class="username">${submission.username}</span>
             </div>
           </td>
@@ -596,8 +597,17 @@
           alert('Something went wrong while updating status.');
         } else {
           alert(`Submission ${newStatus}`);
-          window.location.reload();
+          updateRowUI(id, newStatus);
         }
+        function updateRowUI(id, newStatus) {
+  const button = document.querySelector(`.approve-btn[data-id="${id}"]`);
+  if (!button) return; // row not found
+
+  const row = button.closest("tr");
+  const actionCell = row.querySelector(".action-buttons");
+
+  actionCell.innerHTML = `<span class="status-label ${newStatus}">${newStatus.toUpperCase()}</span>`;
+}
       }
     });
   </script>

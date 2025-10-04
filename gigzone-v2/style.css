@@ -582,3 +582,30 @@
   border-bottom: 1px solid #ddd;
   text-align: left;
 }
+/* Overlay covers the whole page, semi-transparent */
+/* Popup Overlay */
+.popup-overlay {
+  display: none; /* hidden by default */
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* Popup visible state */
+.popup-overlay.active {
+  display: flex;
+}
+
+/* Popup box */
+.popup-content {
+  background: #fff;
+  padding: 20px 25px;
+  border-radius: 10px;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+}

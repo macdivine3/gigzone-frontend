@@ -1,7 +1,8 @@
 // 1) Initialize Supabase
-const SUPABASE_URL = "https://fwwbsoesxijhhpzpdjou.supabase.co";
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3d2Jzb2VzeGlqaGhwenBkam91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1NzA0MzEsImV4cCI6MjA2ODE0NjQzMX0.qELrGVrVdug3q53cxNGStsFEfLcb7N-lVS9u3qu6HEE';
-const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+     const SUPABASE_URL = "https://dhbmtcnuxishkaycskea.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoYm10Y251eGlzaGtheWNza2VhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4NDA3MDAsImV4cCI6MjA3NDQxNjcwMH0.L_BwZNz4BW8GqSyOuJzaKkUkZoRq-7Uz3y5SUha05bM";
+    const { createClient } = window.supabase;
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // 2) Grab task ID from URL and set hidden input
 const params = new URLSearchParams(window.location.search);
@@ -9,7 +10,6 @@ const taskId = params.get("id");
 const taskIdInput = document.getElementById("task-id");
 
 if (!taskId) {
-  // No ID → redirect to browse or show message
   alert("No task specified. Redirecting to Browse Tasks.");
   window.location.href = "browse.html";
 } else {
@@ -18,46 +18,81 @@ if (!taskId) {
 
 // 3) Fetch task details from the view
 async function loadTask() {
-const { data: task, error } = await db
-  .from("tasks_with_details")
-  .select(`
-    title,
-    description,
-    subcategory_label,
-    task_url,
-    client_username,
-    unit_price,
-    is_premium,
-    completed_count,
-    max_earners
-  `)
-  .eq("id", taskId)
-  .single();
-
+  const { data: task, error } = await supabase
+    .from("tasks_with_details")
+    .select(`
+      title,
+      description,
+      subcategory_label,
+      task_url,
+      client_username,
+      subcategory_price,
+      sample_image_url
+    `)
+    .eq("id", taskId.toString())
+    .single();
 
   if (error || !task) {
+    console.error("Supabase error:", error);
     document.getElementById("task-title").textContent = "Task not found";
     return;
   }
 
   document.getElementById("task-title").textContent = task.title;
   document.getElementById("task-description").textContent = task.description;
-  document.getElementById("sub-category").textContent = task.subcategory_label;
-  document.getElementById("client-username").textContent = task.client_username;
-  document.getElementById("task-link").href = task.task_url;
-  // Display extra task info
-document.getElementById("unit-price").textContent =
-  `${task.unit_price.toLocaleString("en-NG", { style: "currency", currency: "NGN" })}`;
+  document.getElementById("sub-category").textContent =
+    task.subcategory_label;
+  document.getElementById("client-username").textContent =
+    task.client_username;
+  document.getElementById("task-link").href = task.task_url || "#";
 
-document.getElementById("is-premium").textContent = task.is_premium ? "🔥 Yes" : "No";
+   // Reward formatting
+  document.getElementById("subcategory_price").textContent =
+    `${task.subcategory_price.toLocaleString("en-NG", {
+      style: "currency",
+      currency: "NGN",
+    })}`;
 
-document.getElementById("progress").textContent = `${task.completed_count} / ${task.max_earners}`;
+// Sample image handling (bulletproof)
+const sampleImage = document.getElementById("sample-image");
 
-if (task.is_premium) {
-    document.getElementById("premium-badge").classList.remove("hidden");
+if (task.sample_image_url) {
+  let publicUrl;
+
+  // If the DB value starts with "http", assume it's already a full URL
+  if (task.sample_image_url.startsWith("http")) {
+    publicUrl = task.sample_image_url;
+  } else {
+    // Otherwise, treat it as a relative path and get public URL from Supabase
+    const { data: imgData, error: imgErr } = supabase.storage
+      .from("task-evidence")
+      .getPublicUrl(task.sample_image_url);
+
+    if (imgErr) {
+      console.error("Error getting public URL:", imgErr);
+      sampleImage.style.display = "none";
+      publicUrl = null;
+    } else {
+      publicUrl = imgData?.publicUrl;
+    }
   }
-if (taskId) loadTask();
+
+  if (publicUrl) {
+    sampleImage.src = publicUrl;
+    sampleImage.style.display = "block";
+  } else {
+    sampleImage.style.display = "none";
+  }
+
+  // Optional: debug logs
+  console.log("Resolved sample image URL:", publicUrl);
+} else {
+  console.log("No sample_image_url found for this task");
+  sampleImage.style.display = "none";
 }
+}
+
+if (taskId) loadTask();
 
 // 4) File preview + drag/drop handling
 const uploadArea = document.querySelector(".file-upload-area");
@@ -68,7 +103,7 @@ const previewImg = document.getElementById("preview");
 fileInput.addEventListener("change", () => {
   const file = fileInput.files[0];
   if (!file) return;
-  if (file.size > 5 * 1024 * 1024) return showStatus("Max 5 MB", "error");
+  if (file.size > 5 * 1024 * 1024) return showStatus("Max 5 MB", "error");
   previewImg.src = URL.createObjectURL(file);
   previewBox.style.display = "block";
 });
@@ -112,46 +147,44 @@ form.addEventListener("submit", async (e) => {
 
   // Upload to bucket 'task-evidence'
   const cleanName = file.name.replace(/[^a-zA-Z0-9.]/g, "_");
-const filePath = `task-${taskId}/${Date.now()}_${cleanName}`;
-  const { error: upErr } = await db.storage
+  const filePath = `task-${taskId}/${Date.now()}_${cleanName}`;
+  const { error: upErr } = await supabase.storage
     .from("task-evidence")
     .upload(filePath, file);
   if (upErr) return showStatus("Upload failed.", "error");
 
   // Get public URL
-   const { data, error: urlErr } = db.storage.from("task-evidence")
-  .getPublicUrl(filePath);
-   if (urlErr) return showStatus("Could not retrieve URL.", "error");
-   const publicUrl = data.publicUrl;
-
+  const { data, error: urlErr } = supabase.storage
+    .from("task-evidence")
+    .getPublicUrl(filePath);
+  if (urlErr) return showStatus("Could not retrieve URL.", "error");
+  const publicUrl = data.publicUrl;
 
   // Get current user
-const { data: sessionData } = await db.auth.getSession();
-const user = sessionData.session?.user;
+  const { data: sessionData } = await supabase.auth.getSession();
+  const user = sessionData.session?.user;
 
-if (!user) {
-  showStatus("Please log in to submit this task.", "error");
-  return;
-}
+  if (!user) {
+    showStatus("Please log in to submit this task.", "error");
+    return;
+  }
 
-const { data: existing } = await db
+  // Check if already submitted
+    const { data: existing, error } = await supabase
   .from("task_submissions")
   .select("id")
   .eq("task_id", taskId)
-  .eq("freelancer_id", user.id)
-  .single();
+  .eq("freelancer_id", user.id);
 
-if (existing) {
+if (existing && existing.length > 0) {
   showStatus("You’ve already submitted for this task.", "error");
   return;
 }
 
   // Insert into submissions table
-  const { error: insErr } = await db
-    .from("task_submissions")
-    .insert([
-      { task_id: taskId, freelancer_id: user.id, proof_url: publicUrl },
-    ]);
+  const { error: insErr } = await supabase.from("task_submissions").insert([
+    { task_id: taskId, freelancer_id: user.id, proof_url: publicUrl },
+  ]);
   if (insErr) return showStatus("Save failed.", "error");
 
   showStatus("Submission successful!", "success");

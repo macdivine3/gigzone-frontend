@@ -238,40 +238,52 @@
             btn.disabled = false;
           },
           callback: function(response) {
-            // Call async IIFE so we can use await/try/catch
-            (async () => {
-              try {
-                const res = await fetch('/api/verify-deposit', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    paystack_reference: response.reference,
-                    amount,
-                    user_id: user.id
-                  })
-                });
+  console.log("✅ Paystack callback triggered. Response:", response);
+  console.log("👉 Sending verification request to backend with:", {
+    paystack_reference: response.reference,
+    amount,
+    user_id: user.id
+  });
 
-                let data;
-                try { data = await res.json(); } catch (e) { throw new Error('Invalid server response'); }
+  (async () => {
+    try {
+      const res = await fetch('https://gigzone-backend.onrender.com/api/verify-deposit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          paystack_reference: response.reference,
+          amount,
+          user_id: user.id
+        })
+      });
 
-                if (!res.ok || !data.success) throw new Error(data.message || 'Verification failed');
+      console.log("📡 Backend verify-deposit raw response:", res);
+      let data;
+      try { 
+        data = await res.json(); 
+      } catch (e) { 
+        throw new Error('Invalid server response'); 
+      }
+      console.log("📡 Backend verify-deposit parsed JSON:", data);
 
-                // Update UI with returned balance
-                walletBalance = parseFloat(data.newBalance ?? walletBalance);
-                document.querySelector('.balance-amount').textContent = `₦${walletBalance.toLocaleString()}`;
-                document.getElementById('walletAmount').textContent = `₦${walletBalance.toLocaleString()}`;
-                addRecentDeposit(amount, 'Via Paystack');
+      if (!res.ok || !data.success) throw new Error(data.message || 'Verification failed');
 
-                alert(`Deposit successful! ₦${amount.toLocaleString()} added to your wallet.`);
-              } catch (err) {
-                console.error('Verification error:', err);
-                alert(`Payment succeeded but verification failed: ${err.message || err}`);
-              } finally {
-                btn.innerHTML = 'Fund Wallet';
-                btn.disabled = false;
-              }
-            })();
-          }
+      // ✅ Update UI with returned balance
+      walletBalance = parseFloat(data.newBalance ?? walletBalance);
+      document.querySelector('.balance-amount').textContent = `₦${walletBalance.toLocaleString()}`;
+      document.getElementById('walletAmount').textContent = `₦${walletBalance.toLocaleString()}`;
+      addRecentDeposit(amount, 'Via Paystack');
+
+      alert(`Deposit successful! ₦${amount.toLocaleString()} added to your wallet.`);
+    } catch (err) {
+      console.error('❌ Verification error (frontend):', err);
+      alert(`Payment succeeded but verification failed: ${err.message || err}`);
+    } finally {
+      btn.innerHTML = 'Fund Wallet';
+      btn.disabled = false;
+    }
+  })();
+}
         });
 
         handler.openIframe();
@@ -294,8 +306,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
   // 1) Initialize Supabase via the global
-  const SUPABASE_URL = 'https://fwwbsoesxijhhpzpdjou.supabase.co';
-  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3d2Jzb2VzeGlqaGhwenBkam91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1NzA0MzEsImV4cCI6MjA2ODE0NjQzMX0.qELrGVrVdug3q53cxNGStsFEfLcb7N-lVS9u3qu6HEE';
+ const SUPABASE_URL = "https://dhbmtcnuxishkaycskea.supabase.co";
+   const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoYm10Y251eGlzaGtheWNza2VhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4NDA3MDAsImV4cCI6MjA3NDQxNjcwMH0.L_BwZNz4BW8GqSyOuJzaKkUkZoRq-7Uz3y5SUha05bM";
   const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   // Runs on page load
@@ -329,6 +341,9 @@
       .select('balance, withdrawable_balance')
       .eq('user_id', currentUserId)
       .single();
+
+      console.log("Wallet query result:", data);
+console.log("Wallet query error:", error);
 
     if (error || !data) {
       console.error("Error fetching wallet data:", error);

@@ -42,10 +42,11 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <script>
-    const SUPABASE_URL = 'https://fwwbsoesxijhhpzpdjou.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3d2Jzb2VzeGlqaGhwenBkam91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1NzA0MzEsImV4cCI6MjA2ODE0NjQzMX0.qELrGVrVdug3q53cxNGStsFEfLcb7N-lVS9u3qu6HEE';
+    // Supabase Configuration
+   const SUPABASE_URL = "https://dhbmtcnuxishkaycskea.supabase.co";
+   const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoYm10Y251eGlzaGtheWNza2VhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4NDA3MDAsImV4cCI6MjA3NDQxNjcwMH0.L_BwZNz4BW8GqSyOuJzaKkUkZoRq-7Uz3y5SUha05bM";
     const { createClient } = window.supabase;
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
     const loginForm = document.getElementById('loginForm');
     const loginBtn = document.getElementById('loginBtn');
@@ -59,15 +60,40 @@
         setTimeout(() => messageDiv.classList.add('hidden'), 5000);
     }
 
-    // 🔐 Protect dashboard redirection if already logged in
+    // Check if already logged in and redirect
     async function checkAuthState() {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session && session.user) {
-            window.location.href = 'dashboard.html';
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session && session.user) {
+                // Check if email is verified
+                if (!session.user.email_confirmed_at) {
+                    showMessage('Please verify your email before logging in. Check your inbox for the verification link.', 'error');
+                    await supabase.auth.signOut(); // Sign out unverified user
+                    return;
+                }
+
+                // Check if profile exists (in case verification was completed but profile creation failed)
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('id')
+                    .eq('id', session.user.id)
+                    .single();
+
+                if (!profile) {
+                    // Redirect to verification page to complete profile creation
+                    window.location.href = 'signup.html';
+                    return;
+                }
+
+                // All good, redirect to dashboard
+                window.location.href = 'dashboard.html';
+            }
+        } catch (error) {
+            console.error('Auth state check error:', error);
         }
     }
 
-    // 🚀 Login logic
+    // Login logic
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const formData = new FormData(loginForm);
@@ -83,24 +109,54 @@
         loginBtn.textContent = 'Logging in...';
 
         try {
-            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+            const { data, error } = await supabase.auth.signInWithPassword({ 
+                email, 
+                password 
+            });
+            
             if (error) throw new Error(error.message);
-            if (!data.user) throw new Error('Login failed');
 
-            // ✅ Redirect after login
-            showMessage('Login successful! Redirecting...', 'success');
-            setTimeout(() => window.location.href = 'dashboard.html', 1500);
+            if (data.user) {
+                // Check if email is verified
+                if (!data.user.email_confirmed_at) {
+                    showMessage('Please verify your email before logging in. Check your inbox for the verification link.', 'error');
+                    await supabase.auth.signOut(); // Sign out unverified user
+                    return;
+                }
+
+                // Check if profile exists
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('id')
+                    .eq('id', data.user.id)
+                    .single();
+
+                if (!profile) {
+                    // Profile doesn't exist, redirect to verification page to create it
+                    showMessage('Completing account setup...', 'success');
+                    setTimeout(() => window.location.href = 'email-verified.html', 1500);
+                    return;
+                }
+
+                // All good, redirect to dashboard
+                showMessage('Login successful! Redirecting...', 'success');
+                setTimeout(() => window.location.href = 'dashboard.html', 1500);
+            }
 
         } catch (error) {
             console.error('Login error:', error);
             let errorMessage = 'An error occurred during login';
+            
             if (error.message.includes('Invalid login credentials')) {
                 errorMessage = 'Invalid email or password';
             } else if (error.message.includes('Too many requests')) {
                 errorMessage = 'Too many login attempts. Please try again later';
+            } else if (error.message.includes('Email not confirmed')) {
+                errorMessage = 'Please verify your email before logging in';
             } else {
                 errorMessage = error.message;
             }
+            
             showMessage(errorMessage, 'error');
         } finally {
             loginBtn.disabled = false;
@@ -108,7 +164,7 @@
         }
     });
 
-    // 🔁 Forgot Password
+    // Forgot Password
     forgotPasswordLink.addEventListener('click', async (e) => {
         e.preventDefault();
         const email = document.getElementById('email').value.trim();
@@ -126,5 +182,8 @@
         }
     });
 
-    checkAuthState(); // 🚨 Moved to last for reliability
-</script>
+    // Initialize auth state check
+    checkAuthState();
+    </script>
+</body>
+</html>

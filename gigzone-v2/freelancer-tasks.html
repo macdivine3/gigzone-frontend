@@ -604,8 +604,8 @@
   <script>
     // Initialize Supabase
     const supabaseClient = window.supabase.createClient(
-    'https://fwwbsoesxijhhpzpdjou.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3d2Jzb2VzeGlqaGhwenBkam91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1NzA0MzEsImV4cCI6MjA2ODE0NjQzMX0.qELrGVrVdug3q53cxNGStsFEfLcb7N-lVS9u3qu6HEE'
+     "https://dhbmtcnuxishkaycskea.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoYm10Y251eGlzaGtheWNza2VhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4NDA3MDAsImV4cCI6MjA3NDQxNjcwMH0.L_BwZNz4BW8GqSyOuJzaKkUkZoRq-7Uz3y5SUha05bM"
   );
 
   // Make it globally available
@@ -629,7 +629,7 @@
       const onHold = submissions.filter(s => s.status === 'pending' || s.status === 'on hold').length;
       const totalEarned = submissions
         .filter(s => s.status === 'approved')
-        .reduce((sum, s) => sum + (s.price || 0), 0);
+        .reduce((sum, s) => sum + (s.unit_price || 0), 0);
 
       // 4. Update cards
       document.getElementById('total-tasks').textContent = totalTasks;
@@ -650,7 +650,7 @@
             <p>Status: <span class="status ${sub.status}">${sub.status}</span></p>
           </div>
           <div class="task-meta">
-            <span class="amount-earned">₦${sub.price}</span>
+            <span class="amount-earned">₦${sub.unit_price}</span>
             <span class="task-date">${new Date(sub.submitted_at).toLocaleDateString()}</span>
           </div>`;
         historyEl.appendChild(row);

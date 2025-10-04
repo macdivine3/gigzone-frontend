@@ -81,6 +81,15 @@
       transform: translateY(-2px);
       box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
     }
+
+    /* ===== GREEN HEADERS FOR IDENTIFICATION ===== */
+    .green-header {
+      color: #2ecc71;
+      font-weight: bold;
+      margin-top: 1rem;
+      margin-bottom: 0.5rem;
+      font-size: 1.2rem;
+    }
   </style>
 </head>
 <body>
@@ -111,6 +120,8 @@
     <div class="upload-form">
       <h2>Task Details</h2>
       <form id="uploadTaskForm">
+
+        <span class="green-header">Title & Description</span>
         <!-- Title -->
         <div class="form-group">
           <label for="task-title">Title</label>
@@ -129,29 +140,13 @@
           <input type="url" id="task-link" placeholder="e.g. Google Form link">
         </div>
 
+        <span class="green-header">Category & Subcategory</span>
         <!-- Category -->
         <div class="form-group">
           <label for="task-category">Category</label>
           <select id="task-category" required>
             <option value="">Select Category</option>
-            <!-- Categories can also be fetched dynamically if needed -->
-            <option value="app tasks">App Tasks</option>
-            <option value="app / website testing">App / Website Testing</option>
-            <option value="canva">Canva</option>
-            <option value="discord">Discord</option>
-            <option value="facebook">Facebook</option>
-            <option value="instagram">Instagram</option>
-            <option value="linkedin">LinkedIn</option>
-            <option value="reddit">Reddit</option>
-            <option value="spotify">Spotify</option>
-            <option value="survey">Survey</option>
-            <option value="telegram">Telegram</option>
-            <option value="threads">Threads</option>
-            <option value="tiktok">TikTok</option>
-            <option value="twitter / x">Twitter / X</option>
-            <option value="whatsapp">WhatsApp</option>
-            <option value="web tasks">Web Tasks</option>
-            <option value="youtube">YouTube</option>
+            <!-- Categories will be populated dynamically from DB -->
           </select>
         </div>
 
@@ -163,6 +158,7 @@
           </select>
         </div>
 
+        <span class="green-header">Freelancer & Pricing</span>
         <!-- Freelancer Count -->
         <div class="form-group">
           <label for="freelancer-count">No. of Freelancers Needed</label>
@@ -179,6 +175,7 @@
           <input type="number" id="task-budget" readonly>
         </div>
 
+        <span class="green-header">Sample Screenshot</span>
         <!-- Sample Screenshot for Freelancers -->
         <div class="form-group">
           <label for="sample-image">Sample Screenshot (optional)</label>
@@ -194,13 +191,13 @@
   <!-- Supabase client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    // Initialize Supabase
-    const SUPABASE_URL = "https://fwwbsoesxijhhpzpdjou.supabase.co";
-  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3d2Jzb2VzeGlqaGhwenBkam91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1NzA0MzEsImV4cCI6MjA2ODE0NjQzMX0.qELrGVrVdug3q53cxNGStsFEfLcb7N-lVS9u3qu6HEE';
-  const { createClient } = window.supabase;
-  const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+    // ================= GREEN HEADER: INITIALIZE SUPABASE =================
+    const SUPABASE_URL = "https://dhbmtcnuxishkaycskea.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoYm10Y251eGlzaGtheWNza2VhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4NDA3MDAsImV4cCI6MjA3NDQxNjcwMH0.L_BwZNz4BW8GqSyOuJzaKkUkZoRq-7Uz3y5SUha05bM";
+    const { createClient } = window.supabase;
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // Elements
+    // ================= GREEN HEADER: ELEMENTS =================
     const uploadForm   = document.getElementById('uploadTaskForm');
     const catSelect    = document.getElementById('task-category');
     const subSelect    = document.getElementById('task-subcategory');
@@ -209,7 +206,7 @@
     const budgetInput  = document.getElementById('task-budget');
     const sampleInput  = document.getElementById('sample-image');
 
-    // Helper: recalc budget
+    // ================= GREEN HEADER: HELPER FUNCTIONS =================
     function updateBudget() {
       const price = parseFloat(unitInput.value) || 0;
       const num   = parseInt(countInput.value)  || 0;
@@ -218,14 +215,35 @@
       budgetInput.value = base + comm;
     }
 
-    // On category change: fetch subcategories from DB
+    // ================= GREEN HEADER: LOAD CATEGORIES =================
+    async function loadCategories() {
+      const { data: categories, error } = await supabase
+        .from('categories')
+        .select('id, name')
+        .order('name', { ascending: true });
+      if (error) return alert('Could not load categories');
+
+      categories.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat.id;
+        opt.textContent = cat.name;
+        catSelect.append(opt);
+      });
+    }
+    loadCategories();
+
+    // ================= GREEN HEADER: CATEGORY CHANGE =================
     catSelect.addEventListener('change', async () => {
       subSelect.innerHTML = '<option value="">Select Subcategory</option>';
+      const catId = parseInt(catSelect.value);
+      if (!catId) return;
+
       const { data: subs, error } = await supabase
         .from('subcategories')
         .select('id, label, unit_price')
-        .eq('category', catSelect.value);
+        .eq('category_id', catId);
       if (error) return alert('Could not load subcategories');
+
       subs.forEach(({ id, label, unit_price }) => {
         const opt = document.createElement('option');
         opt.value = id;
@@ -233,11 +251,12 @@
         opt.dataset.price = unit_price;
         subSelect.append(opt);
       });
-      unitInput.value  = '';
+
+      unitInput.value = '';
       budgetInput.value = '';
     });
 
-    // On subcategory change: set price & recalc
+    // ================= GREEN HEADER: SUBCATEGORY & COUNT =================
     subSelect.addEventListener('change', () => {
       const selected = subSelect.selectedOptions[0];
       unitInput.value = selected?.dataset.price || '';
@@ -245,7 +264,7 @@
     });
     countInput.addEventListener('input', updateBudget);
 
-    // Handle form submission
+    // ================= GREEN HEADER: FORM SUBMISSION =================
     uploadForm.addEventListener('submit', async e => {
       e.preventDefault();
       const title       = document.getElementById('task-title').value.trim();
@@ -256,42 +275,62 @@
       const unit_price  = parseFloat(unitInput.value);
       const max_earners = parseInt(countInput.value);
 
-      // Pricing
-      const baseTotal = unit_price * max_earners;
-      const commission = Math.round(0.2 * baseTotal);
-      const totalPrice = baseTotal + commission;
-      const taskType  = unit_price > 50 ? 'premium' : 'free';
+    // Pricing
+     const baseTotal = unit_price * max_earners;
+     const commission = Math.round(0.2 * baseTotal);  // 20% cut (adjust if needed)
+     const escrowAmount = baseTotal; // money for freelancers
+     const totalPrice = commission + escrowAmount;
+     const taskType  = unit_price > 50 ? 'premium' : 'free';
+      
+     // Auth & profile check
+const { data: { user } } = await supabase.auth.getUser();
+if (!user) return alert('Login required');
 
-      // Auth & profile check
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return alert('Login required');
-      const { data: profile, error: profErr } = await supabase
-        .from('profiles')
-        .select('wallet_balance, is_verified')
-        .eq('id', user.id)
-        .single();
-      if (profErr || !profile) return alert('Profile fetch failed');
-      if (!profile.is_verified) return alert('Only verified users can post tasks');
-      if (totalPrice > profile.wallet_balance) return alert('Insufficient balance');
+// 1️⃣ Fetch profile info
+const { data: profile, error: profErr } = await supabase
+  .from('profiles')
+  .select('is_verified')
+  .eq('id', user.id)
+  .single();
+if (profErr || !profile) return alert('Profile fetch failed');
+if (!profile.is_verified) return alert('Only verified users can post tasks');
+
+// 2️⃣ Fetch wallet balance
+const { data: wallet, error: walletErr } = await supabase
+  .from('wallets')
+  .select('balance')   // replace 'balance' with your actual wallet balance column
+  .eq('user_id', user.id)
+  .single();
+if (walletErr || !wallet) return alert('Wallet fetch failed');
+
+// Check if user has enough balance
+if (totalPrice > wallet.balance) return alert('Insufficient balance');
 
       // Upload sample image (if any)
-      let sampleUrl = null;
-      if (sampleInput.files.length) {
-        const file = sampleInput.files[0];
-        const { data: storageData, error: storageErr } = await supabase.storage
-          .from('task-evidence')
-          .upload(`${user.id}/${Date.now()}_${file.name}`, file);
-        if (storageErr) return alert('Sample upload failed');
-        sampleUrl = supabase.storage.from('task-evidence').getPublicUrl(storageData.path).publicUrl;
-      }
+let sampleUrl = null;
+if (sampleInput.files.length) {
+  const file = sampleInput.files[0];
+  const { data: storageData, error: storageErr } = await supabase.storage
+    .from('task-evidence')
+    .upload(`${user.id}/${Date.now()}_${file.name}`, file, {
+      contentType: file.type,
+    });
+  if (storageErr) return alert('Sample upload failed: ' + storageErr.message);
 
-      // Debit wallet
-      const { error: walletErr } = await supabase.rpc('debit_wallet', {
-        user_id: user.id,
-        amount: totalPrice,
-        reference: 'task_creation'
-      });
-      if (walletErr) return alert('Wallet debit failed');
+  const { data: urlData } = supabase.storage
+    .from('task-evidence')
+    .getPublicUrl(storageData.path);
+
+  sampleUrl = urlData.publicUrl;
+}
+       
+       // ✅ Debit wallet using correct RPC parameter names
+  const { error: debitErr } = await supabase.rpc('debit_wallet', {
+    user_id_param: user.id,
+    amount_param: totalPrice,
+    reference_param: 'task_creation'
+  });
+  if (debitErr) return alert('Wallet debit failed: ' + debitErr.message);
 
       // Insert task record
       const { error: insertErr } = await supabase
@@ -299,10 +338,15 @@
         .insert([{ title, description, task_url: taskUrl,
                    category, subcategory_id,
                    unit_price, commission, total_price: totalPrice,
+                   escrow_amount: escrowAmount,
                    sample_image_url: sampleUrl,
-                   task_type, max_earners,
+                   task_type:taskType,
+                   max_earners,
                    client_id: user.id }]);
-      if (insertErr) return alert('Task creation failed');
+      if (insertErr) {
+  console.error(insertErr);
+  return alert('Task creation failed: ' + insertErr.message);
+}
 
       alert('Task uploaded successfully!');
       uploadForm.reset();

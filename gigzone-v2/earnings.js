@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     .eq('user_id', userId)
     .single();
 
-  const walletBalance = wallet?.balance || 0;
+  const walletBalance = wallet?.withdrawable_balance || 0;
 
   // Fetch badge rewards (achievement bonuses)
   const { data: badgeRewards, error: badgeError } = await supabase

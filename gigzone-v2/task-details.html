@@ -16,6 +16,7 @@
     <a href="browse.html" class="back-button">
       <i class="fas fa-arrow-left"></i> Back to Tasks
     </a>
+    <h1 id="task-title">Loading…</h1>
 
     <div class="description">
       <h2 class="section-title">
@@ -33,31 +34,27 @@
         <div class="label">Posted by</div>
         <div class="value" id="client-username">Loading…</div>
       </div>
-       <div class="meta-item">
-    <div class="label">Reward</div>
-    <div class="value" id="unit-price">Loading…</div>
-  </div>
+      <div class="meta-item">
+        <div class="label">Reward</div>
+        <div class="value" id="subcategory_price">Loading…</div>
+      </div>
+    </div>
 
-  <div class="meta-item">
-    <div class="label">Premium</div>
-    <div class="value" id="is-premium">Loading…</div>
-  </div>
-
-  <div class="meta-item">
-    <div class="label">Progress</div>
-    <div class="value" id="progress">Loading…</div>
+    <div class="meta-item">
+  <div class="label">Task Link</div>
+  <div class="value">
+    <a id="task-link" href="#" target="_blank">
+      <i class="fas fa-external-link-alt"></i> Open Link
+    </a>
   </div>
 </div>
 
-      <div class="meta-item">
-        <div class="label">Task Link</div>
-        <div class="value">
-          <a id="task-link" href="#" target="_blank">
-            <i class="fas fa-external-link-alt"></i> Open Link
-          </a>
-        </div>
-      </div>
-    </div>
+<div class="evidence-section">
+  <div class="screenshot-upload">
+    <div class="label">Sample Image</div>
+    <img id="sample-image" style="display:none; max-width:100%; border-radius:8px;" />
+  </div>
+</div>
 
     <div class="upload-section">
       <h2 class="section-title">
@@ -70,10 +67,10 @@
         <div
           class="file-upload-area"
           onclick="document.getElementById('screenshot').click()"
-          >
+        >
           <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
           <div class="upload-text">Click or drag & drop image</div>
-          <div class="upload-subtext">(PNG, JPG – max 5 MB)</div>
+          <div class="upload-subtext">(PNG, JPG – max 5 MB)</div>
         </div>
 
         <!-- Remove required so browser doesn't block hidden input -->
@@ -117,6 +114,8 @@
     </div>
   </div>
 
-  <script src="task-details.js"></script>
+  <!-- index.html or task-details.html -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/supabase.min.js"></script>
+<script src="task-details.js"></script>
 </body>
 </html>

@@ -124,7 +124,7 @@
 
   <a href="earnings.html" class="card-link">
     <div class="card">
-      <h3 id="withdrawable-balance">₦0.00</h3>
+      <h3 id="withdrawable_balance">₦0.00</h3>
       <p>Withdrawable Balance</p>
     </div>
   </a>
@@ -198,14 +198,14 @@
   </script>
 
   <!-- Supabase Auth & Data Script -->
-<script src="https://cdn.jsdelvr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
   const { createClient } = window.supabase;
 
   const supabaseClient = createClient(
-    'https://fwwbsoesxijhhpzpdjou.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3d2Jzb2VzeGlqaGhwenBkam91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1NzA0MzEsImV4cCI6MjA2ODE0NjQzMX0.qELrGVrVdug3q53cxNGStsFEfLcb7N-lVS9u3qu6HEE'
+  "https://dhbmtcnuxishkaycskea.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoYm10Y251eGlzaGtheWNza2VhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4NDA3MDAsImV4cCI6MjA3NDQxNjcwMH0.L_BwZNz4BW8GqSyOuJzaKkUkZoRq-7Uz3y5SUha05bM"
   );
   // Show loading overlay
   const overlay = document.createElement('div');
@@ -246,6 +246,7 @@
 
     // 👋 Show welcome message
     document.getElementById("welcome-message").textContent = `Welcome back, ${profileData.username} 👋`;
+    await fetchAndDisplayStats();
     document.body.removeChild(overlay);
   })();
 
@@ -302,22 +303,22 @@
       // Step 3: Fetch withdrawable balance
       const { data: wallet, error: walletErr } = await supabaseClient
         .from('wallets')
-        .select('balances')
+        .select('withdrawable_balance')
         .eq('user_id', userId)
         .single();
 
-      const balance = walletErr || !wallet ? 0 : Number(wallet.balance);
-      document.getElementById('withdrawable-balance').textContent = `₦${balance.toFixed(2)}`;
+      const withdrawable_balance = walletErr || !wallet ? 0 : Number(wallet.withdrawable_balance);
+      document.getElementById('withdrawable_balance').textContent = `₦${withdrawable_balance.toFixed(2)}`;
 
       // Step 4: Fetch completed task count
       const { count: completedCount, error: countErr } = await supabaseClient
-        .from('task_submission')
+        .from('task_submissions')
         .select('*', { count: 'exact', head: true })
-        .eq('freelaner_id', userId)
+        .eq('freelancer_id', userId)
         .eq('status', 'approved');
 
       const tasksCompleted = countErr ? 0 : completedCount;
-      document.getElemetById('completed-tasks').textContent = tasksCompleted;
+      document.getElementById('completed-tasks').textContent = tasksCompleted;
 
     } catch (err) {
       console.error("Error fetching stats:", err);
