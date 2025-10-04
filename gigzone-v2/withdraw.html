@@ -254,7 +254,7 @@
       <h2>Withdraw Funds</h2>
       
       <div class="balance-card">
-        <p>Available Balance</p>
+        <p>withdrawable balance</p>
         <p class="balance-amount">₦0.00</p>
       </div>
 
@@ -345,7 +345,7 @@ async function handleWithdrawal() {
 
   try {
     // 4. Call Paystack Proxy to initiate transfer
-    const paystackResponse = await fetch('http://localhost:5000/paystack/transfer', {
+    const paystackResponse = await fetch('https://gigzone-backend.onrender.com/paystack/transfer', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -418,8 +418,8 @@ async function handleWithdrawal() {
   </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-  const SUPABASE_URL = 'https://fwwbsoesxijhhpzpdjou.supabase.co';
-  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ3d2Jzb2VzeGlqaGhwenBkam91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1NzA0MzEsImV4cCI6MjA2ODE0NjQzMX0.qELrGVrVdug3q53cxNGStsFEfLcb7N-lVS9u3qu6HEE';
+ const SUPABASE_URL = "https://dhbmtcnuxishkaycskea.supabase.co";
+   const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoYm10Y251eGlzaGtheWNza2VhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4NDA3MDAsImV4cCI6MjA3NDQxNjcwMH0.L_BwZNz4BW8GqSyOuJzaKkUkZoRq-7Uz3y5SUha05bM";
   const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   let currentUserId = null;
@@ -441,7 +441,7 @@ async function handleWithdrawal() {
     // 2. Fetch wallet
     const { data: wallet, error: walletError } = await supabase
       .from('wallets')
-      .select('balance, account_number, account_name')
+      .select('withdrawable_balance, account_number, account_name')
       .eq('user_id', currentUserId)
       .single();
 
@@ -451,7 +451,7 @@ async function handleWithdrawal() {
     }
 
     // Show balance
-    document.querySelector('.balance-amount').textContent = `₦${Number(wallet.balance).toLocaleString()}`;
+    document.querySelector('.balance-amount').textContent = `₦${Number(wallet.withdrawable_balance).toLocaleString()}`;
 
     // Fill in bank select (you can customize this more)
     const bankSelect = document.getElementById('bank');
