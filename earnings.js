@@ -152,7 +152,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const referralCode = profile.referral_code;
 
   // Create referral link
-  const referralLink = `https://gigzone.com/signup?ref=${referralCode}`;
+  const referralLink = `https://officialgigzone.com.ng/signup?ref=${referralCode}`;
 
   // Set the referral link in the input field
   const referralInput = document.getElementById('referralLink');
